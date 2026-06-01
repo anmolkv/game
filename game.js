@@ -465,7 +465,7 @@ function createStepElement(num) {
     content.className = "step-content";
     
     const stoneImg = document.createElement("img");
-    stoneImg.src = "image/stone.png";
+    stoneImg.src = "image/Stone.png";
     stoneImg.className = "step-image";
     content.appendChild(stoneImg);
 
