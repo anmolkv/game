@@ -85,37 +85,37 @@ const LEVELS = [
             { type: "final_confirm", text: "37 is the largest number." }
         ]
     },
-    // SECTION 3: LBD 3 IP Practice (31,35,13)
+    // SECTION 3: LBD 3 Practice (31,35,13)
     {
         id: "section_3", initialOrder: [31, 35, 13], correctSorted: [13, 31, 35],
-        orderType: "ascending", symbol: "<", mode: "ip",
+        orderType: "ascending", symbol: "<", mode: "practice",
         steps: [
             { type: "msg", text: "Put the steps in order." },
             { type: "show_slots", text: "Put the steps in order from smallest to largest." }
         ]
     },
-    // SECTION 4: LBD 4 IP Practice (58,35,53)
+    // SECTION 4: LBD 4 Practice (58,35,53)
     {
         id: "section_4", initialOrder: [58, 35, 53], correctSorted: [35, 53, 58],
-        orderType: "ascending", symbol: "<", mode: "ip",
+        orderType: "ascending", symbol: "<", mode: "practice",
         steps: [
             { type: "msg", text: "Drag the steps into order." },
             { type: "show_slots", text: "Put the steps in order from smallest to largest." }
         ]
     },
-    // SECTION 5: LBD 5 IP Practice (76,71,73)
+    // SECTION 5: LBD 5 Practice (76,71,73)
     {
         id: "section_5", initialOrder: [76, 71, 73], correctSorted: [71, 73, 76],
-        orderType: "ascending", symbol: "<", mode: "ip",
+        orderType: "ascending", symbol: "<", mode: "practice",
         steps: [
             { type: "msg", text: "Drag the steps into order." },
             { type: "show_slots", text: "From smallest to largest." }
         ]
     },
-    // SECTION 6: LBD 6 IP Practice (64,59,60)
+    // SECTION 6: LBD 6 Practice (64,59,60)
     {
         id: "section_6", initialOrder: [64, 59, 60], correctSorted: [59, 60, 64],
-        orderType: "ascending", symbol: "<", mode: "ip",
+        orderType: "ascending", symbol: "<", mode: "practice",
         steps: [
             { type: "msg", text: "Drag the steps into order." },
             { type: "show_slots", text: "From smallest to largest." }
@@ -260,6 +260,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadLevel(0);
 
     window.addEventListener("resize", handleResize);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", handleResize);
+    }
     
     document.getElementById("checkBtn").addEventListener("click", () => {
         const level = LEVELS[gameState.currentLevelIdx];
@@ -309,10 +312,11 @@ function setupLayout() {
 
 function handleResize() {
     const container = document.getElementById("gameContainer");
-    const ww = window.innerWidth;
-    const wh = window.innerHeight;
-    
-    // Fit content fully within viewport — body background fills the rest
+    // Use visualViewport when available (more accurate on mobile browsers)
+    const vp = window.visualViewport;
+    const ww = vp ? vp.width  : window.innerWidth;
+    const wh = vp ? vp.height : window.innerHeight;
+
     const scale = Math.min(ww / 1920, wh / 1080);
     gameState.scale = scale;
 
@@ -449,10 +453,72 @@ function loadLevel(idx) {
         gameState.slots[i] = el;
     });
     
-    // Render immediate snap to positions
+    // Render immediate snap to positions (sets baseline coords)
     renderSlots(false);
-    
+
+    // Always scatter stones for the animated intro on every LBD
+    scatterStones();
+
     runStep();
+}
+
+function scatterStones() {
+    // Start each stone at a distinct zone, then let JS roam them freely
+    const zones = [
+        { x: 120 + Math.random() * 180, y: 360 + Math.random() * 130 },
+        { x: 560 + Math.random() * 180, y: 170 + Math.random() * 130 },
+        { x: 1020 + Math.random() * 180, y: 300 + Math.random() * 130 },
+    ];
+    zones.sort(() => Math.random() - 0.5);
+
+    gameState.slots.forEach((el, i) => {
+        if (!el) return;
+        el.style.transition = "none";
+        el.style.left = `${zones[i].x}px`;
+        el.style.top  = `${zones[i].y}px`;
+        el.classList.remove("drifting");
+        el.classList.add("scattered");
+        // Staggered roam start so stones don't move in sync
+        setTimeout(() => roamStone(el), i * 400);
+        // Staggered blink start
+        el._blinkTimer = setTimeout(() => blinkEyes(el), 1000 + i * 800 + Math.random() * 1000);
+    });
+}
+
+function blinkEyes(el) {
+    if (!el || !el.classList.contains("scattered")) return;
+    const open   = el.querySelector(".eyes-open");
+    const closed = el.querySelector(".eyes-closed");
+    if (!open || !closed) return;
+
+    // Close eyes
+    open.style.display   = "none";
+    closed.style.display = "block";
+
+    // Reopen after 120ms (fast blink)
+    setTimeout(() => {
+        if (!el.classList.contains("scattered")) {
+            open.style.display   = "";
+            closed.style.display = "";
+            return;
+        }
+        open.style.display   = "";
+        closed.style.display = "";
+        // Schedule next blink in 2–4s
+        el._blinkTimer = setTimeout(() => blinkEyes(el), 2000 + Math.random() * 2000);
+    }, 120);
+}
+
+function roamStone(el) {
+    if (!el || !el.classList.contains("scattered")) return;
+    // Pick a new random position across nearly the full game-container
+    const x   = 120 + Math.random() * 1560;   // 120–1680 px (safe of pillars)
+    const y   = 150 + Math.random() * 530;    // 150–680 px (below banner)
+    const dur = 2200 + Math.random() * 1800;  // 2.2–4s per move
+    el.style.transition = `left ${dur}ms ease-in-out, top ${dur}ms ease-in-out`;
+    el.style.left = `${x}px`;
+    el.style.top  = `${y}px`;
+    el._roamTimer = setTimeout(() => roamStone(el), dur + 50);
 }
 
 function createStepElement(num) {
@@ -484,9 +550,9 @@ function createStepElement(num) {
     eyesContainer.appendChild(eyesClosed);
     content.appendChild(eyesContainer);
 
-    const zzz = document.createElement("div");
+    const zzz = document.createElement("img");
+    zzz.src = "image/zzz animation.gif";
     zzz.className = "sleeping-zzz";
-    zzz.innerHTML = `<span>z</span><span>z</span><span>Z</span>`;
     content.appendChild(zzz);
     
     // Digits structure
@@ -569,15 +635,18 @@ function setupInteractions(el) {
     });
 }
 
-function renderSlots(animate = true) {
+function renderSlots(animate = true, slowReturn = false) {
     gameState.slots.forEach((el, idx) => {
         if (!el || el === gameState.activeDrag) return;
-        
+
         const pos = getSlotPos(idx);
-        
+
         if (animate) {
-            // Snappy spring ease gives a distinct 'magnetic' attraction feel!
-            el.style.transition = "left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            if (slowReturn) {
+                el.style.transition = "left 1.8s ease-in-out, top 1.8s ease-in-out";
+            } else {
+                el.style.transition = "left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            }
         } else {
             el.style.transition = "none";
         }
@@ -932,11 +1001,28 @@ function runStep() {
     
     // Voice-driven orchestration
     if (step.type === "msg") {
-        speakText(step.text, () => nextStep());
+        // First slide: 2s gap after VO. All other slides: advance immediately after VO.
+        const gap = gameState.currentStepIdx === 0 ? 2000 : 0;
+        speakText(step.text, () => setTimeout(nextStep, gap));
     }
     else if (step.type === "show_slots") {
         document.getElementById("slotsContainer").style.transition = "opacity 0.8s ease";
         document.getElementById("slotsContainer").style.opacity = "1";
+
+        // Stop roaming + blinking, reset eyes, slow-animate to slots
+        gameState.slots.forEach(el => {
+            if (!el) return;
+            if (el._roamTimer)  { clearTimeout(el._roamTimer);  el._roamTimer  = null; }
+            if (el._blinkTimer) { clearTimeout(el._blinkTimer); el._blinkTimer = null; }
+            // Reset eye state
+            const open   = el.querySelector(".eyes-open");
+            const closed = el.querySelector(".eyes-closed");
+            if (open)   open.style.display   = "";
+            if (closed) closed.style.display = "";
+            el.classList.remove("scattered");
+            el.classList.add("drifting");
+        });
+        renderSlots(true, true); // slow smooth return
 
         if (level.mode === "practice") {
             speakText(step.text);
@@ -963,7 +1049,7 @@ function runStep() {
         applyDigitHighlights(step.highlight, step.highlightStones);
         speakText(step.text);
         const tapTarget = document.getElementById(`step_${step.targetNum}`);
-        if (tapTarget) startNudgeTimer("tap", tapTarget, null);
+        if (tapTarget) startNudgeTimer("tap", tapTarget, null, step.digitType);
     }
     else if (step.type === "swap_step") {
         gameState.isWaitingForClick = false;
@@ -1103,19 +1189,17 @@ function clearIdleTimer() {
     if (gameState.idleTimer) { clearTimeout(gameState.idleTimer); gameState.idleTimer = null; }
 }
 
-function startNudgeTimer(type, targetEl, targetSlotIdx) {
+function startNudgeTimer(type, targetEl, targetSlotIdx, digitType) {
     if (gameState.nudgeTimer) { clearTimeout(gameState.nudgeTimer); gameState.nudgeTimer = null; }
-    // Capture current level + step so the nudge only fires if still on the same step
     const lvl  = gameState.currentLevelIdx;
     const step = gameState.currentStepIdx;
     gameState.nudgeTimer = setTimeout(() => {
-        // Bail if level or step has changed
         if (gameState.currentLevelIdx !== lvl || gameState.currentStepIdx !== step) return;
         if (!targetEl || !targetEl.parentNode) return;
-        if (type === "tap") showTapNudge(targetEl);
+        if (type === "tap") showTapNudge(targetEl, digitType);
         else if (type === "drag") showDragNudge(targetEl, targetSlotIdx);
         if (gameState.nudgeTimer) { clearTimeout(gameState.nudgeTimer); gameState.nudgeTimer = null; }
-        gameState.nudgeTimer = setTimeout(() => startNudgeTimer(type, targetEl, targetSlotIdx), 8000);
+        gameState.nudgeTimer = setTimeout(() => startNudgeTimer(type, targetEl, targetSlotIdx, digitType), 8000);
     }, 8000);
 }
 
@@ -1136,12 +1220,26 @@ function clearNudgeElements() {
     document.querySelectorAll(".tap-nudge, .tap-nudge-hand, .drag-nudge, .drag-path-svg").forEach(el => el.remove());
 }
 
-function showTapNudge(stoneEl) {
+function showTapNudge(stoneEl, digitType) {
     clearNudgeElements();
     const gc = document.getElementById("gameContainer");
-    const { x: cx, y: cy } = stoneCenter(stoneEl);
 
-    // Ripple rings centred on the stone
+    // Target the specific digit using its actual rendered position
+    let cx, cy;
+    if (digitType) {
+        const digitEl = stoneEl.querySelector(`.digit.${digitType}`);
+        if (digitEl) {
+            const gcRect = document.getElementById("gameContainer").getBoundingClientRect();
+            const dRect  = digitEl.getBoundingClientRect();
+            cx = (dRect.left + dRect.width  / 2 - gcRect.left) / gameState.scale;
+            cy = (dRect.top  + dRect.height / 2 - gcRect.top)  / gameState.scale;
+        } else {
+            const c = stoneCenter(stoneEl); cx = c.x; cy = c.y;
+        }
+    } else {
+        const c = stoneCenter(stoneEl); cx = c.x; cy = c.y;
+    }
+
     for (let i = 0; i < 3; i++) {
         const ring = document.createElement("div");
         ring.className = "tap-nudge";
@@ -1151,7 +1249,6 @@ function showTapNudge(stoneEl) {
         gc.appendChild(ring);
     }
 
-    // Hand pointing at the stone digit area
     const hand = document.createElement("img");
     hand.src = "image/nudge.png";
     hand.className = "tap-nudge-hand";
@@ -1164,49 +1261,59 @@ function showTapNudge(stoneEl) {
 
 function showDragNudge(stoneEl, targetSlotIdx) {
     clearNudgeElements();
-    const gc = document.getElementById("gameContainer");
 
-    // Use getSlotPos for the target slot (already game coords)
-    const slotPos = getSlotPos(targetSlotIdx);
-    const { x: fromX, y: fromY } = stoneCenter(stoneEl);
-    const toX   = slotPos.x + 220; // slot center x
-    const lineY = fromY;            // same horizontal row
+    const origX = parseFloat(stoneEl.style.left);
+    const origY = parseFloat(stoneEl.style.top);
+    const targetPos = getSlotPos(targetSlotIdx);
 
-    // Dashed horizontal line
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.classList.add("drag-path-svg");
-    svg.style.cssText = "position:absolute;top:0;left:0;width:1920px;height:1080px;pointer-events:none;z-index:9998;overflow:visible;";
+    // Stone currently in the target slot (for swap demo)
+    const swapEl  = gameState.slots[targetSlotIdx];
+    const hasSwap = swapEl && swapEl !== stoneEl && !gameState.slotsLocked[targetSlotIdx];
+    let swapOrigX, swapOrigY;
+    if (hasSwap) {
+        swapOrigX = parseFloat(swapEl.style.left);
+        swapOrigY = parseFloat(swapEl.style.top);
+    }
 
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", fromX); line.setAttribute("y1", lineY);
-    line.setAttribute("x2", toX);   line.setAttribute("y2", lineY);
-    line.setAttribute("stroke", "rgba(255,230,80,0.9)");
-    line.setAttribute("stroke-width", "5");
-    line.setAttribute("stroke-dasharray", "18 10");
-    line.setAttribute("stroke-linecap", "round");
-    line.classList.add("drag-dash-line");
-    svg.appendChild(line);
+    const moveDur = 700;
 
-    const dir = toX > fromX ? 0 : 180;
-    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    arrow.setAttribute("points", "0,-10 20,0 0,10");
-    arrow.setAttribute("fill", "rgba(255,230,80,0.95)");
-    arrow.setAttribute("transform", `translate(${toX},${lineY}) rotate(${dir})`);
-    svg.appendChild(arrow);
-    gc.appendChild(svg);
+    // Phase 1 — move stones toward target positions
+    stoneEl.style.transition = `left ${moveDur}ms ease-in-out, top ${moveDur}ms ease-in-out`;
+    stoneEl.style.opacity    = "0.72";
+    stoneEl.style.zIndex     = "200";
+    stoneEl.style.left = `${targetPos.x}px`;
+    stoneEl.style.top  = `${targetPos.y}px`;
 
-    // Hand sliding from stone to target
-    const hand = document.createElement("img");
-    hand.src = "image/nudge.png";
-    hand.className = "drag-nudge";
-    hand.style.left = `${fromX}px`;
-    hand.style.top  = `${fromY + 30}px`;
-    hand.style.setProperty("--ndx", `${toX - fromX}px`);
-    hand.style.setProperty("--ndy", "0px");
-    hand.style.setProperty("--arc", "0px");
-    gc.appendChild(hand);
+    if (hasSwap) {
+        swapEl.style.transition = `left ${moveDur}ms ease-in-out, top ${moveDur}ms ease-in-out`;
+        swapEl.style.opacity    = "0.72";
+        swapEl.style.left = `${origX}px`;
+        swapEl.style.top  = `${origY}px`;
+    }
 
-    setTimeout(clearNudgeElements, 2800);
+    // Phase 2 — pause, then return
+    setTimeout(() => {
+        stoneEl.style.transition = `left ${moveDur}ms ease-in-out, top ${moveDur}ms ease-in-out`;
+        stoneEl.style.left = `${origX}px`;
+        stoneEl.style.top  = `${origY}px`;
+
+        if (hasSwap) {
+            swapEl.style.transition = `left ${moveDur}ms ease-in-out, top ${moveDur}ms ease-in-out`;
+            swapEl.style.left = `${swapOrigX}px`;
+            swapEl.style.top  = `${swapOrigY}px`;
+        }
+
+        // Phase 3 — clean up
+        setTimeout(() => {
+            stoneEl.style.opacity    = "";
+            stoneEl.style.zIndex     = "";
+            stoneEl.style.transition = "";
+            if (hasSwap) {
+                swapEl.style.opacity    = "";
+                swapEl.style.transition = "";
+            }
+        }, moveDur);
+    }, moveDur + 600);
 }
 
 function showPracticeNudge() {
@@ -1216,10 +1323,8 @@ function showPracticeNudge() {
     const currentValues = gameState.slots.map(el => parseInt(el.dataset.num));
     for (let i = 0; i < currentValues.length; i++) {
         if (currentValues[i] !== level.correctSorted[i]) {
-            // Find which stone should go to slot i
-            const correctNum = level.correctSorted[i];
-            const stoneEl = document.getElementById(`step_${correctNum}`);
-            if (stoneEl) showDragNudge(stoneEl, i);
+            const stoneEl = document.getElementById(`step_${level.correctSorted[i]}`);
+            if (stoneEl) showDragNudge(stoneEl, i); // swap demo hint
             break;
         }
     }
@@ -1304,8 +1409,8 @@ function spawnBalloons() {
         if (poppedOrGone >= totalBalloons) showOverlay();
     }
 
-    // Fallback: show overlay after 7s if user ignores balloons
-    setTimeout(showOverlay, 7000);
+    // Fallback: show overlay after 18s if user ignores balloons
+    setTimeout(showOverlay, 18000);
 
     // Tutorial hint: auto-pop one balloon as demonstration after 2.2s
     let hintShown = false;
@@ -1348,8 +1453,8 @@ function spawnBalloons() {
 
         const colWidth = 1760 / totalBalloons;
         const xPos = 80 + colWidth * i + (Math.random() * colWidth * 0.5);
-        const delay = i * 0.25;
-        const duration = 4.5 + Math.random() * 1.5;
+        const delay = i * 0.4;
+        const duration = 9 + Math.random() * 3;
         const swayDir = i % 2 === 0 ? 1 : -1;
 
         balloon.style.left = `${xPos}px`;
