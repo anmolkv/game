@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.figma.com)",
+      "Bash(Test-Path \"d:\\\\game\\\\image\\\\header.png\")",
+      "Bash(dir \"d:\\\\game\")",
+      "PowerShell(Stop-Process -Name \"powershell\" -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1; Start-Process powershell -ArgumentList \"-NoProfile -ExecutionPolicy Bypass -File `\"d:\\\\game\\\\serve.ps1`\"\" -WorkingDirectory \"d:\\\\game\"; Start-Sleep -Seconds 2; Write-Host \"Server restarted\")",
+      "PowerShell(Start-Process powershell -ArgumentList \"-NoProfile -ExecutionPolicy Bypass -File `\"d:\\\\game\\\\serve.ps1`\"\" -WorkingDirectory \"d:\\\\game\"; Write-Host \"Server started\")",
+      "PowerShell(Start-Sleep -Seconds 2; try { $r = Invoke-WebRequest \"http://localhost:8000/SFX/BACKGROUND/SFX%201.mp3\" -Method Head; Write-Host \"Status: $\\($r.StatusCode\\) ContentType: $\\($r.Headers['Content-Type']\\)\" } catch { Write-Host \"Error: $_\" })",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue)",
+      "PowerShell(try { $r = Invoke-WebRequest \"http://localhost:8000/\" -TimeoutSec 3; Write-Host \"Server running: $\\($r.StatusCode\\)\" } catch { Write-Host \"Server not running\" })",
+      "PowerShell(Start-Process powershell -ArgumentList \"-NoProfile -ExecutionPolicy Bypass -Command `\"cd 'd:\\\\game'; .\\\\serve.ps1`\"\" -WindowStyle Normal; Start-Sleep -Seconds 3; try { $r = Invoke-WebRequest 'http://localhost:8000/' -TimeoutSec 3; Write-Host \"OK: $\\($r.StatusCode\\)\" } catch { Write-Host \"Still not running\" })",
+      "PowerShell(python --version 2>&1)",
+      "PowerShell(python3 --version 2>&1)",
+      "PowerShell(try { $r = Invoke-WebRequest \"http://localhost:8000/SFX/BACKGROUND/SFX%201.mp3\" -Method Head -TimeoutSec 3; Write-Host \"Audio OK: $\\($r.StatusCode\\) - $\\($r.Headers['Content-Type']\\)\" } catch { Write-Host \"Error: $_\" })",
+      "PowerShell(try { $r = Invoke-WebRequest \"http://localhost:8000/\" -TimeoutSec 5; Write-Host \"Server OK\" } catch { Write-Host \"Not running: $_\" })",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File serve.ps1)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)"
+    ]
+  }
+}

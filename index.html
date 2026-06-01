@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Naughty Number Steps - Magical Ordering Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=10.0">
+</head>
+<body>
+    <!-- Full-screen viewport wrapper -->
+    <div class="game-root">
+        <!-- Scaled 16:9 Aspect Ratio Container -->
+        <div class="game-container" id="gameContainer">
+            
+            <!-- Top HUD Banner Area -->
+            <div class="instruction-hud">
+<div class="instruction-bubble">
+                    <span id="instructionText">Arrange the numbers from the smallest to the largest.</span>
+                </div>
+            </div>
+
+            <!-- The Staircase / Game Area — constrained to safe zone between pillars -->
+            <div class="game-field" id="gameField">
+                <div class="slots-container" id="slotsContainer"></div>
+            </div>
+
+            <!-- Playground lives at full game-container width so stone positions are correct -->
+            <div class="steps-playground" id="playground"></div>
+
+            <!-- Canvas for Magical Particle Effects (Sparkles/Confetti) -->
+            <canvas id="fxCanvas" class="effects-canvas"></canvas>
+
+            <!-- Reusable Static SVG Defs for JS cloning -->
+            <div style="display:none;">
+                <svg id="stoneTemplate" viewBox="0 0 300 160">
+                    <defs>
+                        <!-- Realistic Rock Gradients -->
+                        <linearGradient id="rockTop" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#9c4fe0" />
+                            <stop offset="50%" stop-color="#662ea5" />
+                            <stop offset="100%" stop-color="#441a78" />
+                        </linearGradient>
+                        <linearGradient id="rockBottom" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#3b1466" />
+                            <stop offset="100%" stop-color="#1e0537" />
+                        </linearGradient>
+                        <filter id="rockShadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.6" />
+                        </filter>
+                    </defs>
+                    <g class="stone-body" filter="url(#rockShadow)">
+                        <!-- Lower jagged rock -->
+                        <path d="M20,80 L30,110 L60,130 L90,150 L150,160 L210,150 L240,130 L270,110 L280,80 Z" fill="url(#rockBottom)" />
+                        <!-- Top platform jagged layer -->
+                        <path d="M10,60 L30,40 L90,35 L150,38 L210,35 L270,40 L290,60 L270,90 L210,100 L150,105 L90,100 L30,90 Z" fill="url(#rockTop)" />
+                        <!-- Rim Highlight -->
+                        <path d="M30,40 L90,35 L150,38 L210,35 L270,40" fill="none" stroke="#d5aaff" stroke-width="4" opacity="0.7" stroke-linecap="round" />
+                        <!-- No Eyes - Clear platform as requested -->
+                    </g>
+                </svg>
+            </div>
+            
+<!-- IP Mode Check Button -->
+            <button class="check-btn" id="checkBtn" style="display:none">✓ Check</button>
+
+        </div>
+    </div>
+
+    <!-- Transition video OUTSIDE game container so position:fixed works correctly -->
+    <div class="transition-overlay" id="transitionOverlay">
+        <video id="transitionVideo" src="image/Mid Screen video.mp4" playsinline></video>
+    </div>
+
+    <audio id="bgMusic" src="SFX/BACKGROUND/SFX 1.mp3" loop muted preload="auto"></audio>
+    <script src="game.js?v=10.0"></script>
+</body>
+</html>
