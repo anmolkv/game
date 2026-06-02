@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Naughty Number Steps - Magical Ordering Game</title>
+    <title>Stairway Shuffle - Magical Ordering Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
@@ -17,7 +17,10 @@
     </div>
 
     <!-- Full-screen viewport wrapper -->
-    <div class="game-root">
+    <div class="game-root" id="gameRoot">
+        <!-- Sized wrapper: JS sets this to scaledW×scaledH so it is centred by flex
+             and the 1920×1080 canvas inside never overflows its parent -->
+        <div class="game-wrapper" id="gameWrapper">
         <!-- Scaled 16:9 Aspect Ratio Container -->
         <div class="game-container" id="gameContainer">
             
@@ -73,14 +76,16 @@
             <button class="check-btn" id="checkBtn" style="display:none">✓ Check</button>
 
         </div>
+        </div><!-- /game-wrapper -->
     </div>
 
     <!-- Transition video OUTSIDE game container so position:fixed works correctly -->
     <div class="transition-overlay" id="transitionOverlay">
-        <video id="transitionVideo" src="image/Mid Screen video.mp4" playsinline></video>
+        <video id="transitionVideo" playsinline></video>
     </div>
 
     <audio id="bgMusic" src="SFX/BACKGROUND/SFX 1.mp3" loop muted preload="auto"></audio>
+
     <script src="game.js?v=11.3"></script>
 </body>
 </html>

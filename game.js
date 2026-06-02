@@ -1,5 +1,5 @@
 /**
- * Naughty Number Steps - High Fidelity Swapping Game Engine
+ * Stairway Shuffle - High Fidelity Swapping Game Engine
  * Implements Section 1, Section 2, and Section 3
  */
 
@@ -42,83 +42,140 @@ const gameState = {
     consecutiveErrors: 0,
     idleTimer: null,
     nudgeTimer: null,
-    levelComplete: false
+    levelComplete: false,
+    pendingLevelIdx: null
 };
 
 // --- LEVEL REGISTRY ---
 const LEVELS = [
-    // SECTION 1: LBD 1 Tutorial (31,13,29)
+    // Tutorial-1: ascending, different tens (31, 13, 29)
     {
-        id: "section_1", initialOrder: [31, 13, 29], correctSorted: [13, 29, 31],
-        orderType: "ascending", symbol: "<", mode: "tutorial",
+        id: "tutorial_1", initialOrder: [31, 13, 29], correctSorted: [13, 29, 31],
+        orderType: "ascending", mode: "tutorial",
         steps: [
-            { type: "msg", text: "Arrange the numbers from the smallest to the largest." },
-            { type: "show_slots", text: "Let us put the steps in order from smallest to largest." },
-            { type: "instruction", text: "Look at the tens digit.", highlight: "tens", highlightStones: true },
-            { type: "tap", text: "Tap the smallest tens digit.", targetNum: 13, digitType: "tens", highlight: "tens", highlightStones: true },
-            { type: "msg", text: "So, 13 is the smallest number!", glowNum: 13 },
+            { type: "msg", text: "Let us put the steps in order." },
+            { type: "show_slots", text: "From smallest to largest." },
+            { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
+            { type: "tap", text: "Tap the smallest tens digit.", targetNum: 13, digitType: "tens", tapMode: "smallest", correctMsg: "Yes, 1 is the smallest tens digit.", highlight: "tens", highlightStones: true },
+            { type: "msg", text: "So, 13 is the smallest number.", glowNum: 13 },
             { type: "swap_step", text: "Drag 13 to the first place.", dragNum: 13, targetSlot: 0, successMsg: "Well done!", lockTarget: true },
             { type: "instruction", text: "Compare the tens digits of the remaining numbers.", highlight: "tens", highlightStones: "remaining" },
-            { type: "tap", text: "Tap the smaller tens digit.", targetNum: 29, digitType: "tens", highlight: "tens", highlightStones: "remaining" },
-            { type: "msg", text: "So, 29 is smaller than 31.", glowNum: 29 },
+            { type: "tap", text: "Tap the smaller tens digit.", targetNum: 29, digitType: "tens", tapMode: "smallest", correctMsg: "Yes, 2 is smaller than 3.", highlight: "tens", highlightStones: "remaining" },
+            { type: "msg", text: "So, 29 is smaller than 31.", glowNums: [29, 31] },
             { type: "swap_step", text: "Drag 29 to the second place.", dragNum: 29, targetSlot: 1, successMsg: "Well done!", lockTarget: true },
             { type: "final_confirm", text: "31 is the largest number." }
         ]
     },
-    // SECTION 2: LBD 2 Tutorial (37,30,32 — same tens)
+    // Practice-1: ascending (48, 62, 26) → [26, 48, 62]
     {
-        id: "section_2", initialOrder: [37, 30, 32], correctSorted: [30, 32, 37],
-        orderType: "ascending", symbol: "<", mode: "tutorial",
+        id: "practice_1", initialOrder: [48, 62, 26], correctSorted: [26, 48, 62],
+        orderType: "ascending", mode: "practice",
         steps: [
-            { type: "msg", text: "Arrange the numbers from the smallest to the largest." },
-            { type: "show_slots", text: "Let us put the steps in order from smallest to largest." },
-            { type: "instruction", text: "Look at the tens digit.", highlight: "tens", highlightStones: true },
-            { type: "msg", text: "All the numbers have the same tens digit." },
-            { type: "instruction", text: "Now look at the ones digits.", highlight: "ones", highlightStones: true },
-            { type: "tap", text: "Tap the smallest ones digit.", targetNum: 30, digitType: "ones", highlight: "ones", highlightStones: true },
-            { type: "msg", text: "So, 30 is the smallest number!", glowNum: 30 },
+            { type: "show_slots", text: "Put the steps in order from smallest to largest." }
+        ]
+    },
+    // Tutorial-2: ascending, same tens (37, 30, 32)
+    {
+        id: "tutorial_2", initialOrder: [37, 30, 32], correctSorted: [30, 32, 37],
+        orderType: "ascending", mode: "tutorial",
+        steps: [
+            { type: "msg", text: "Put the steps in order." },
+            { type: "show_slots", text: "From smallest to largest." },
+            { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
+            { type: "msg", text: "All numbers have the same tens." },
+            { type: "instruction", text: "Look at the ones digits now.", highlight: "ones", highlightStones: true },
+            { type: "tap", text: "Tap the smallest ones digit.", targetNum: 30, digitType: "ones", tapMode: "smallest", correctMsg: "Yes, 0 is the smallest ones digit.", highlight: "ones", highlightStones: true },
+            { type: "msg", text: "So, 30 is the smallest number.", glowNum: 30 },
             { type: "swap_step", text: "Drag 30 to the first place.", dragNum: 30, targetSlot: 0, successMsg: "Well done!", lockTarget: true },
-            { type: "instruction", text: "Compare the ones digit of the remaining numbers.", highlight: "ones", highlightStones: "remaining" },
-            { type: "tap", text: "Tap the smaller ones digit.", targetNum: 32, digitType: "ones", highlight: "ones", highlightStones: "remaining" },
-            { type: "msg", text: "So, 32 is smaller than 37.", glowNum: 32 },
+            { type: "instruction", text: "Compare the ones digits of the remaining numbers.", highlight: "ones", highlightStones: "remaining" },
+            { type: "tap", text: "Tap the smaller ones digit.", targetNum: 32, digitType: "ones", tapMode: "smallest", correctMsg: "Yes, 2 is smaller than 7.", highlight: "ones", highlightStones: "remaining" },
+            { type: "msg", text: "So, 32 is smaller than 37.", glowNums: [32, 37] },
             { type: "swap_step", text: "Drag 32 to the second place.", dragNum: 32, targetSlot: 1, successMsg: "Well done!", lockTarget: true },
             { type: "final_confirm", text: "37 is the largest number." }
         ]
     },
-    // SECTION 3: LBD 3 Practice (31,35,13)
+    // Practice-2: ascending (76, 71, 73) → [71, 73, 76]
     {
-        id: "section_3", initialOrder: [31, 35, 13], correctSorted: [13, 31, 35],
-        orderType: "ascending", symbol: "<", mode: "practice",
+        id: "practice_2", initialOrder: [76, 71, 73], correctSorted: [71, 73, 76],
+        orderType: "ascending", mode: "practice",
+        steps: [
+            { type: "show_slots", text: "Put the steps in order from smallest to largest." }
+        ]
+    },
+    // Practice-3: ascending (31, 35, 13) → [13, 31, 35]
+    {
+        id: "practice_3", initialOrder: [31, 35, 13], correctSorted: [13, 31, 35],
+        orderType: "ascending", mode: "practice",
+        steps: [
+            { type: "show_slots", text: "Put the steps in order from smallest to largest." }
+        ]
+    },
+    // Practice-4: ascending (64, 60, 59) → [59, 60, 64]
+    {
+        id: "practice_4", initialOrder: [64, 60, 59], correctSorted: [59, 60, 64],
+        orderType: "ascending", mode: "practice",
+        steps: [
+            { type: "show_slots", text: "Put the steps in order from smallest to largest." }
+        ]
+    },
+    // Tutorial-3: descending, different tens then same tens (30, 47, 36)
+    {
+        id: "tutorial_3", initialOrder: [30, 47, 36], correctSorted: [47, 36, 30],
+        orderType: "descending", mode: "tutorial",
         steps: [
             { type: "msg", text: "Put the steps in order." },
-            { type: "show_slots", text: "Put the steps in order from smallest to largest." }
+            { type: "show_slots", text: "From largest to smallest." },
+            { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
+            { type: "tap", text: "Tap the largest tens digit.", targetNum: 47, digitType: "tens", tapMode: "largest", correctMsg: "Yes, 4 is the largest tens digit.", highlight: "tens", highlightStones: true },
+            { type: "msg", text: "So, 47 is the largest number.", glowNum: 47 },
+            { type: "swap_step", text: "Drag 47 to the first place.", dragNum: 47, targetSlot: 0, successMsg: "Well done!", lockTarget: true },
+            { type: "instruction", text: "Compare the tens digits of the remaining numbers.", highlight: "tens", highlightStones: "remaining" },
+            { type: "msg", text: "Both the numbers have the same tens." },
+            { type: "instruction", text: "Look at the ones digits now.", highlight: "ones", highlightStones: "remaining" },
+            { type: "tap", text: "Tap the larger ones digit.", targetNum: 36, digitType: "ones", tapMode: "largest", correctMsg: "Yes, 6 is larger than 0.", highlight: "ones", highlightStones: "remaining" },
+            { type: "msg", text: "So, 36 is larger than 30.", glowNums: [36, 30] },
+            { type: "swap_step", text: "Drag 36 to the second place.", dragNum: 36, targetSlot: 1, successMsg: "Well done!", lockTarget: true },
+            { type: "final_confirm", text: "30 is the smallest number." }
         ]
     },
-    // SECTION 4: LBD 4 Practice (58,35,53)
+    // Practice-5: descending (50, 53, 57) → [57, 53, 50]
     {
-        id: "section_4", initialOrder: [58, 35, 53], correctSorted: [35, 53, 58],
-        orderType: "ascending", symbol: "<", mode: "practice",
+        id: "practice_5", initialOrder: [50, 53, 57], correctSorted: [57, 53, 50],
+        orderType: "descending", mode: "practice",
         steps: [
-            { type: "msg", text: "Drag the steps into order." },
-            { type: "show_slots", text: "Put the steps in order from smallest to largest." }
+            { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
-    // SECTION 5: LBD 5 Practice (76,71,73)
+    // Practice-6: descending (57, 59, 75) → [75, 59, 57]
     {
-        id: "section_5", initialOrder: [76, 71, 73], correctSorted: [71, 73, 76],
-        orderType: "ascending", symbol: "<", mode: "practice",
+        id: "practice_6", initialOrder: [57, 59, 75], correctSorted: [75, 59, 57],
+        orderType: "descending", mode: "practice",
         steps: [
-            { type: "msg", text: "Drag the steps into order." },
-            { type: "show_slots", text: "From smallest to largest." }
+            { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
-    // SECTION 6: LBD 6 Practice (64,59,60)
+    // Practice-7: descending (39, 42, 26) → [42, 39, 26]
     {
-        id: "section_6", initialOrder: [64, 59, 60], correctSorted: [59, 60, 64],
-        orderType: "ascending", symbol: "<", mode: "practice",
+        id: "practice_7", initialOrder: [39, 42, 26], correctSorted: [42, 39, 26],
+        orderType: "descending", mode: "practice",
         steps: [
-            { type: "msg", text: "Drag the steps into order." },
-            { type: "show_slots", text: "From smallest to largest." }
+            { type: "show_slots", text: "Put the steps in order from largest to smallest." }
+        ]
+    },
+    // Practice-8: descending (61, 69, 66) → [69, 66, 61]
+    {
+        id: "practice_8", initialOrder: [61, 69, 66], correctSorted: [69, 66, 61],
+        orderType: "descending", mode: "practice",
+        steps: [
+            { type: "show_slots", text: "Put the steps in order from largest to smallest." }
+        ]
+    },
+    // Practice-9: descending (79, 81, 92) → [92, 81, 79]
+    {
+        id: "practice_9", initialOrder: [79, 81, 92], correctSorted: [92, 81, 79],
+        orderType: "descending", mode: "practice",
+        steps: [
+            { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
 ];
@@ -255,6 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startBackgroundMusic();
     initBatSprite();
     initFlyingWizard();
+    preloadNeelSprite();
     setupFXCanvas();
     
     loadLevel(0);
@@ -262,6 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("resize", handleResize);
     if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", handleResize);
+        window.visualViewport.addEventListener("scroll", handleResize); // handles address-bar hide/show
     }
     
     document.getElementById("checkBtn").addEventListener("click", () => {
@@ -291,19 +350,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Transition video: play between levels
+    // Transition video: 2-second timeout drives level change (video just plays visually)
     const transitionVideo = document.getElementById("transitionVideo");
-    transitionVideo.addEventListener("ended", () => {
-        const overlay = document.getElementById("transitionOverlay");
-        overlay.classList.remove("active");
-        transitionVideo.pause();
-        transitionVideo.currentTime = 0;
-        // Resume background music when next LBD starts
-        const bgMusic = document.getElementById("bgMusic");
-        if (bgMusic) bgMusic.play().catch(() => {});
-        const nextLvlIdx = gameState.currentLevelIdx + 1;
-        loadLevel(nextLvlIdx < LEVELS.length ? nextLvlIdx : 0);
-    });
+    transitionVideo.addEventListener("ended", completeTransition);
 });
 
 function setupLayout() {
@@ -311,16 +360,33 @@ function setupLayout() {
 }
 
 function handleResize() {
-    const container = document.getElementById("gameContainer");
-    // Use visualViewport when available (more accurate on mobile browsers)
     const vp = window.visualViewport;
-    const ww = vp ? vp.width  : window.innerWidth;
-    const wh = vp ? vp.height : window.innerHeight;
+    const ww = vp ? vp.width  : (window.innerWidth  || document.documentElement.clientWidth);
+    const wh = vp ? vp.height : (window.innerHeight || document.documentElement.clientHeight);
 
     const scale = Math.min(ww / 1920, wh / 1080);
     gameState.scale = scale;
 
+    // Wrapper is exactly the scaled canvas size — flex on game-root centres it
+    const scaledW = Math.round(1920 * scale);
+    const scaledH = Math.round(1080 * scale);
+    const wrapper = document.getElementById("gameWrapper");
+    if (wrapper) {
+        wrapper.style.width  = scaledW + "px";
+        wrapper.style.height = scaledH + "px";
+    }
+
+    // Scale the 1920×1080 canvas from its top-left corner inside the wrapper
+    const container = document.getElementById("gameContainer");
+    container.style.transformOrigin = "top left";
     container.style.transform = `scale(${scale})`;
+
+    // Keep game-root sized to the true visual viewport for accurate flex centering
+    const root = document.getElementById("gameRoot");
+    if (root) {
+        root.style.width  = ww + "px";
+        root.style.height = wh + "px";
+    }
 }
 
 function setupAudio() {
@@ -441,6 +507,11 @@ function loadLevel(idx) {
         </div>
     `;
     
+    // Flip separator arrows for descending levels
+    document.querySelectorAll(".sep-arrow").forEach(a => {
+        a.classList.toggle("sep-arrow-flipped", level.orderType === "descending");
+    });
+
     // Hide slots and separators initially for intro feeling
     document.getElementById("slotsContainer").style.opacity = "0";
     
@@ -824,8 +895,6 @@ function stopDragging(el) {
         playSynth('wrong');
         el.classList.add("stone-glow-red");
         setTimeout(() => el.classList.remove("stone-glow-red"), 700);
-        const wr = el.getBoundingClientRect();
-        showFlyingWizard(false);
 
 
     }
@@ -868,8 +937,6 @@ function triggerLockWobble(el) {
     playSynth('wrong');
     el.classList.add("stone-glow-red");
     setTimeout(() => el.classList.remove("stone-glow-red"), 700);
-    const r = el.getBoundingClientRect();
-    showFlyingWizard(false);
 }
 
 function spawnBats(cx, cy) {
@@ -1001,7 +1068,16 @@ function runStep() {
     
     // Voice-driven orchestration
     if (step.type === "msg") {
-        // First slide: 2s gap after VO. All other slides: advance immediately after VO.
+        // Highlight comparison numbers if specified
+        if (step.glowNums) {
+            step.glowNums.forEach(n => {
+                const el = document.getElementById(`step_${n}`);
+                if (el) el.querySelectorAll(".digit").forEach(d => d.classList.add("highlight"));
+            });
+        } else if (step.glowNum) {
+            const el = document.getElementById(`step_${step.glowNum}`);
+            if (el) el.querySelectorAll(".digit").forEach(d => d.classList.add("highlight"));
+        }
         const gap = gameState.currentStepIdx === 0 ? 2000 : 0;
         speakText(step.text, () => setTimeout(nextStep, gap));
     }
@@ -1045,7 +1121,7 @@ function runStep() {
     }
     else if (step.type === "tap") {
         gameState.isWaitingForClick = true;
-        gameState.targetDigitClick = { num: step.targetNum, type: step.digitType };
+        gameState.targetDigitClick = { num: step.targetNum, type: step.digitType, tapMode: step.tapMode || "smallest" };
         applyDigitHighlights(step.highlight, step.highlightStones);
         speakText(step.text);
         const tapTarget = document.getElementById(`step_${step.targetNum}`);
@@ -1102,7 +1178,7 @@ function handleDigitClick(stepEl, digitEl) {
         
         document.querySelectorAll(".number-step").forEach(s => s.classList.remove("stone-glow-white"));
         stepEl.classList.add("stone-glow-green");
-        stepEl.querySelectorAll(".digit").forEach(d => d.classList.add("highlight"));
+        digitEl.classList.add("highlight");   // only the tapped comparison digit glows
         showFlyingWizard(true);
         
         // Starburst fx
@@ -1114,11 +1190,7 @@ function handleDigitClick(stepEl, digitEl) {
         
         // Render visual feedback text change
         const currentStep = LEVELS[gameState.currentLevelIdx].steps[gameState.currentStepIdx];
-        let correctPrompt = `Yes! ${digitEl.textContent} is the smallest ${type} digit!`;
-        if (currentStep.targetNum === 29) correctPrompt = "Yes! 2 is smaller than 3!";
-        if (currentStep.targetNum === 30) correctPrompt = "Yes! 0 is the smallest ones digit!";
-        if (currentStep.targetNum === 32) correctPrompt = "Yes! 2 is smaller than 7!";
-        if (currentStep.targetNum === 53) correctPrompt = "Yes! 3 is smaller than 8!";
+        const correctPrompt = currentStep.correctMsg || `Yes, ${digitEl.textContent} is correct.`;
         
         setInstruction(correctPrompt);
         
@@ -1134,8 +1206,6 @@ function handleDigitClick(stepEl, digitEl) {
         
         stepEl.classList.add("stone-glow-red");
         setTimeout(() => stepEl.classList.remove("stone-glow-red"), 600);
-        const sr = stepEl.getBoundingClientRect();
-        showFlyingWizard(false);
         setInstruction("Oops! Try Again.");
         speakText("Oops! Try Again.");
         
@@ -1396,12 +1466,13 @@ function spawnBalloons() {
         overlayShown = true;
         const overlay = document.getElementById("transitionOverlay");
         const video  = document.getElementById("transitionVideo");
+        const climbNum = (gameState.currentLevelIdx % 6) + 1;
+        video.src = `image/${climbNum} climb.mp4`;
+        video.load();
         overlay.classList.add("active");
-        video.currentTime = 0;
         video.play().catch(() => {});
-        // Pause background music while video plays
-        const bgMusic = document.getElementById("bgMusic");
-        if (bgMusic) bgMusic.pause();
+        // Background music keeps playing; clip auto-closes after 2 s
+        setTimeout(completeTransition, 2000);
     }
 
     function checkAllDone() {
@@ -1478,9 +1549,11 @@ function spawnBalloons() {
             boomEl.style.left = `${br2.left + br2.width / 2}px`;
             boomEl.style.top = `${br2.top + br2.height / 2}px`;
             const boomStyle = BALLOON_BOOM_COLORS[src] || { color: "#ff9800", outline: "#ffffff" };
+            const strokePx  = Math.max(1, Math.round(3 * gameState.scale));
+            const shadowOff = Math.max(1, Math.round(2 * gameState.scale));
             boomEl.style.color = boomStyle.color;
-            boomEl.style.setProperty("-webkit-text-stroke", `3px ${boomStyle.outline}`);
-            boomEl.style.textShadow = `2px 2px 0 ${boomStyle.outline}, -2px -2px 0 ${boomStyle.outline}, 2px -2px 0 ${boomStyle.outline}, -2px 2px 0 ${boomStyle.outline}`;
+            boomEl.style.setProperty("-webkit-text-stroke", `${strokePx}px ${boomStyle.outline}`);
+            boomEl.style.textShadow = `${shadowOff}px ${shadowOff}px 0 ${boomStyle.outline}, -${shadowOff}px -${shadowOff}px 0 ${boomStyle.outline}, ${shadowOff}px -${shadowOff}px 0 ${boomStyle.outline}, -${shadowOff}px ${shadowOff}px 0 ${boomStyle.outline}`;
             boomEl.style.fontSize = `${Math.round(72 * gameState.scale)}px`;
             document.body.appendChild(boomEl);
             setTimeout(() => boomEl.remove(), 900);
@@ -1505,13 +1578,154 @@ function spawnBalloons() {
     }
 }
 
+// --- NEEL JUMP ANIMATION ---
+// Pose indices in "Neel jump poses.png" (3 cols × 1 row)
+const NEEL_STAND = 0, NEEL_JUMP = 1, NEEL_RUN = 2;
+let _neelSprite = null;
+
+function preloadNeelSprite() {
+    _neelSprite = new Image();
+    _neelSprite.src = 'image/Neel jump poses.png';
+}
+
+function playNeelJumps(onDone) {
+    const old = document.getElementById('neel-jumper');
+    if (old) old.remove();
+
+    if (!_neelSprite || !_neelSprite.complete || !_neelSprite.naturalWidth) {
+        if (onDone) setTimeout(onDone, 50);
+        return;
+    }
+
+    // ── Canvas ──────────────────────────────────────────────────────────────
+    const COLS = 3;
+    const fw = _neelSprite.naturalWidth  / COLS;  // source frame width  (e.g. 640 px)
+    const fh = _neelSprite.naturalHeight;          // source frame height (e.g. 1080 px)
+
+    // DW sets display width; DH computed from real aspect ratio → zero stretching
+    const DW = 215;
+    const DH = Math.round(DW * fh / fw);
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'neel-jumper';
+    canvas.width  = DW;
+    canvas.height = DH;
+    Object.assign(canvas.style, {
+        position: 'absolute', pointerEvents: 'none',
+        zIndex: '200', width: DW + 'px', height: DH + 'px'
+    });
+    document.getElementById('gameContainer').appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    // Draws one pose — clears canvas first so no ghosting ever
+    function draw(pose) {
+        ctx.clearRect(0, 0, DW, DH);
+        ctx.drawImage(
+            _neelSprite,
+            Math.round(pose * fw), 0,
+            Math.round(fw), Math.round(fh),
+            0, 0, DW, DH
+        );
+    }
+
+    // ── Waypoints ────────────────────────────────────────────────────────────
+    // Neel image (1920×1080): characters are vertically centred in their frame —
+    // feet sit at ~68 % of frame height (not 80 %).  Stone flat top surface is
+    // at roughly p.y + 70 within the 280 px stone element.
+    const targets = gameState.slots.map((_, i) => {
+        const p = getSlotPos(i);
+        return {
+            x: p.x + 220 - DW / 2,
+            y: p.y + 70 - Math.round(DH * 0.68)
+        };
+    });
+
+    const wps = [
+        { x: -DW - 70, y: targets[0].y },   // off-screen left (entry)
+        targets[0], targets[1], targets[2],   // the three stones
+        { x: 1990,     y: targets[2].y }      // off-screen right (exit)
+    ];
+
+    draw(NEEL_JUMP);
+    canvas.style.left = `${wps[0].x}px`;
+    canvas.style.top  = `${wps[0].y}px`;
+
+    let wi = 0;
+
+    // ── Movement helper (quadratic Bézier) ───────────────────────────────────
+    function moveTo(a, b, arcH, dur, cb) {
+        const ctrlX = (a.x + b.x) / 2;
+        const ctrlY = Math.min(a.y, b.y) - arcH;
+        const t0 = performance.now();
+
+        function tick(now) {
+            const t = Math.min((now - t0) / dur, 1), u = 1 - t;
+            canvas.style.left = `${u*u*a.x + 2*u*t*ctrlX + t*t*b.x}px`;
+            canvas.style.top  = `${u*u*a.y + 2*u*t*ctrlY + t*t*b.y}px`;
+            t < 1 ? requestAnimationFrame(tick) : cb();
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // ── Sequence ─────────────────────────────────────────────────────────────
+    function step() {
+        if (wi >= wps.length - 1) { canvas.remove(); if (onDone) onDone(); return; }
+
+        const a = wps[wi], b = wps[wi + 1];
+        const dx  = Math.abs(b.x - a.x);
+        const isExit = (wi === wps.length - 2);   // last move → off-screen
+
+        if (isExit) {
+            // Running exit: RUN pose, flat trajectory, quick
+            draw(NEEL_RUN);
+            moveTo(a, b, 0, 480, () => {
+                canvas.remove();
+                if (onDone) onDone();
+            });
+        } else {
+            // Jump arc: JUMP pose, parabolic arc
+            const arcH = Math.min(360, dx * 0.82);
+            const dur  = 440 + dx * 0.25;
+            draw(NEEL_JUMP);
+            moveTo(a, b, arcH, dur, () => {
+                wi++;
+                // Land: show STAND pose briefly, then next jump
+                draw(NEEL_STAND);
+                setTimeout(() => step(), 380);
+            });
+        }
+    }
+
+    step();
+}
+
+// --- NAVIGATION MENU ---
+
+function completeTransition() {
+    const overlay = document.getElementById("transitionOverlay");
+    if (!overlay.classList.contains("active")) return;  // guard: already done
+    overlay.classList.remove("active");
+    const video = document.getElementById("transitionVideo");
+    video.pause();
+    video.currentTime = 0;
+    let nextIdx;
+    if (gameState.pendingLevelIdx !== null) {
+        nextIdx = gameState.pendingLevelIdx;
+        gameState.pendingLevelIdx = null;
+    } else {
+        nextIdx = gameState.currentLevelIdx + 1;
+        if (nextIdx >= LEVELS.length) nextIdx = 0;
+    }
+    loadLevel(nextIdx);
+}
+
 // --- VICTORY / CELEBRATION ---
 function triggerVictory() {
     gameState.levelComplete = true;
     clearNudgeTimer();
     clearIdleTimer();
-    setInstruction("Yayy! You fixed the steps!");
-    speakText("Yayy! You fixed the steps!");
+    setInstruction("Yay! Steps are fixed.");
+    speakText("Yay! Steps are fixed.");
     playSynth('victory');
 
     // Close ALL stones' eyes at this moment (last stone wasn't faded yet)
@@ -1522,7 +1736,7 @@ function triggerVictory() {
         }
     });
 
-    spawnBalloons();
+    playNeelJumps(() => spawnBalloons());
 }
 
 

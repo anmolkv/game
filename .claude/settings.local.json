@@ -15,7 +15,12 @@
       "PowerShell(try { $r = Invoke-WebRequest \"http://localhost:8000/SFX/BACKGROUND/SFX%201.mp3\" -Method Head -TimeoutSec 3; Write-Host \"Audio OK: $\\($r.StatusCode\\) - $\\($r.Headers['Content-Type']\\)\" } catch { Write-Host \"Error: $_\" })",
       "PowerShell(try { $r = Invoke-WebRequest \"http://localhost:8000/\" -TimeoutSec 5; Write-Host \"Server OK\" } catch { Write-Host \"Not running: $_\" })",
       "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File serve.ps1)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)",
+      "Bash(dir \"d:\\\\CG\\\\the story night game\\\\image\" /b)",
+      "Bash(findstr /i \"neel\")",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('image/pre lbd.png'\\); print\\(img.size, img.mode\\)\")",
+      "Bash(python -c \"from PIL import Image; img=Image.open\\('image/pre lbd.png'\\); print\\(img.size, img.mode\\)\")",
+      "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $img=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/pre lbd.png'\\\\''\\)\\); Write-Host $img.Width $img.Height; $img.Dispose\\(\\)')"
     ]
   }
 }

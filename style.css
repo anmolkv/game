@@ -28,43 +28,60 @@ html {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
 }
 
 body {
-    background: url('image/final BG (13) 1.png') no-repeat center center fixed;
+    background: url('image/final BG (13) 1.png') no-repeat center center;
     background-size: cover;
     background-color: #0a1e3a;
     overflow: hidden;
+    overscroll-behavior: none;
     width: 100%;
     height: 100%;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
     font-family: var(--font-text);
     position: fixed;
-    top: 0; left: 0;
+    inset: 0;
 }
 
 /* --- RESPONSIVE SCALING CONTAINER --- */
+
+/* Outer shell: fixed, fills the visual viewport (JS sizes it precisely) */
 .game-root {
-    width: 100vw;
-    height: 100vh;
-    height: -webkit-fill-available;
+    position: fixed;
+    top: 0; left: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: transparent;
-    position: fixed;
-    top: 0; left: 0;
     overflow: hidden;
+    background: transparent;
 }
 
+/* Sized wrapper: JS sets width/height to exactly (1920*scale) × (1080*scale).
+   Flex centres this small box; overflow:hidden keeps rendering clean.
+   The 1920×1080 canvas inside starts at (0,0) and scales with transform-origin
+   top-left — its DOM box is always within this wrapper, so pointer events
+   and overflow clipping work correctly on every screen size. */
+.game-wrapper {
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* Full 1920×1080 design canvas — JS scales it via transform */
 .game-container {
     width: 1920px;
     height: 1080px;
     position: relative;
     overflow: visible;
-    transform-origin: center center;
+    transform-origin: top left;
     background: transparent;
+}
+
+/* touch-action:none lets Pointer Events capture touch drags without the
+   browser treating them as scroll/pan gestures */
+.number-step {
+    touch-action: none;
 }
 
 /* Portrait mode warning for phones/tablets */
@@ -290,6 +307,14 @@ body {
     transform: scale(1.2);
 }
 
+.sep-arrow-flipped {
+    transform: scaleX(-1);
+}
+
+.slot-separator.arrow-glow-yellow .sep-arrow-flipped {
+    transform: scaleX(-1) scale(1.2);
+}
+
 /* --- DRAGGABLE FLOATING STEPS --- */
 .steps-playground {
     position: absolute;
@@ -451,9 +476,7 @@ body {
 /* --- TRANSITION VIDEO OVERLAY --- */
 .transition-overlay {
     position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;                   /* fills the true visual viewport on all devices */
     z-index: 3000;
     opacity: 0;
     pointer-events: none;
@@ -467,15 +490,11 @@ body {
 }
 
 #transitionVideo {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    transform: translate(-50%, -50%);
-    object-fit: cover;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;          /* fills overlay, maintains aspect ratio */
+    object-position: center;
 }
 
 .next-btn:active {
@@ -821,3 +840,6 @@ body {
     from { stroke-dashoffset: 0; }
     to   { stroke-dashoffset: -46; }
 }
+
+/* Neel canvas is fully styled inline by JS */
+
