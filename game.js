@@ -606,8 +606,8 @@ function blinkEyes(el) {
 function roamStone(el) {
     if (!el || !el.classList.contains("scattered")) return;
     // Stone 440×280 px — keep fully within 1920×1080 (20 px margin each side)
-    const x   = 20  + Math.random() * (1920 - 440 - 40);  // 20–1460 px
-    const y   = 195 + Math.random() * (1080 - 280 - 215); // 195–585 px (below banner)
+    const x   = 20  + Math.random() * (1920 - 500 - 40);  // 20–1380 px
+    const y   = 195 + Math.random() * (1080 - 320 - 195); // 195–565 px (below banner, stone 320 px tall)
     const dur = 2200 + Math.random() * 1800;               // 2.2–4 s per move
     el.style.transition = `left ${dur}ms ease-in-out, top ${dur}ms ease-in-out`;
     el.style.left = `${x}px`;
@@ -1301,11 +1301,11 @@ function clearNudgeTimer() {
     clearNudgeElements();
 }
 
-// Stone center in game coords (stones are 440×280, positioned via style.left/top)
+// Stone center in game coords (stones are 500×320, positioned via style.left/top)
 function stoneCenter(el) {
     return {
-        x: parseFloat(el.style.left) + 220,
-        y: parseFloat(el.style.top)  + 140
+        x: parseFloat(el.style.left) + 250,
+        y: parseFloat(el.style.top)  + 160
     };
 }
 
@@ -1659,7 +1659,7 @@ function playNeelJumps(onDone) {
     const targets = gameState.slots.map((_, i) => {
         const p = getSlotPos(i);
         return {
-            x: p.x + 220 - DW / 2,
+            x: p.x + 250 - DW / 2,
             y: p.y + 70 - Math.round(DH * 0.68)
         };
     });

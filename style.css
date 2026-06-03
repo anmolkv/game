@@ -232,15 +232,16 @@ body {
 /* --- GAME FIELD & SLOTS --- */
 .game-field {
     position: absolute;
-    top: 0;
+    top: 190px;          /* below instruction HUD (15 + 172 = 187 px) */
     bottom: 0;
-    left: 200px;
-    right: 200px;
+    padding-bottom: 180px;  /* shifts the flex centre ~90 px upward */
+    left: 120px;         /* narrower margins so bigger stones fit cleanly */
+    right: 120px;
     z-index: 5;
     display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: none; /* Allow events to pass to absolute children */
+    pointer-events: none;
 }
 
 /* The Swapping Slots Container */
@@ -263,8 +264,8 @@ body {
 
 /* The underlying slot target - COMPLETELY INVISIBLE as per user instructions */
 .slot-target {
-    width: 440px;
-    height: 280px;
+    width: 500px;
+    height: 320px;
     position: relative;
     border-radius: 40px;
     background: transparent;
@@ -288,12 +289,12 @@ body {
 /* Order Operator Sign Separators */
 .slot-separator {
     align-self: center;
-    margin: 0 20px;
+    margin: 0 10px;
     transition: all 0.4s ease;
 }
 
 .sep-arrow {
-    width: 80px;
+    width: 65px;
     height: auto;
     opacity: 1.0;
     display: block;
@@ -326,8 +327,8 @@ body {
 }
 
 .number-step {
-    width: 440px;
-    height: 280px;
+    width: 500px;
+    height: 320px;
     position: absolute;
     cursor: grab;
     z-index: 50;
@@ -384,11 +385,11 @@ body {
 /* Eyes Positioning */
 .naughty-eyes-container {
     position: absolute;
-    top: 118px;
+    top: 135px;
     left: 44%;
     transform: translate(-50%, -50%);
-    width: 130px;
-    height: 52px;
+    width: 148px;
+    height: 59px;
     z-index: 60;
     pointer-events: none;
 }
@@ -418,7 +419,7 @@ body {
 /* The Numerals Container */
 .digit-holder {
     position: absolute;
-    top: 168px;
+    top: 192px;
     left: 45%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -432,7 +433,7 @@ body {
 .digit {
     font-family: 'Lilita One', sans-serif; /* Swapped to Fredoka to achieve target friendly rounded curves */
     font-weight: 400;
-    font-size: 75px;
+    font-size: 85px;
     color: #ffffff;
     text-shadow: 0 4px 10px rgba(0,0,0,0.5);
     display: inline-block;
@@ -633,7 +634,7 @@ body {
     position: absolute;
     top: 10px;
     left: 48%;
-    width: 260px;
+    width: 295px;
     height: auto;
     display: none;
     z-index: 70;
