@@ -61,7 +61,7 @@ const LEVELS = [
             { type: "swap_step", text: "Drag 13 to the first place.", dragNum: 13, targetSlot: 0, successMsg: "Well done!", lockTarget: true },
             { type: "instruction", text: "Compare the tens digits of the remaining numbers.", highlight: "tens", highlightStones: "remaining" },
             { type: "tap", text: "Tap the smaller tens digit.", targetNum: 29, digitType: "tens", tapMode: "smallest", correctMsg: "Yes, 2 is smaller than 3.", highlight: "tens", highlightStones: "remaining" },
-            { type: "msg", text: "So, 29 is smaller than 31.", glowNums: [29, 31] },
+            { type: "msg", text: "So, 29 is smaller than 31.", glowNum: 29 },
             { type: "swap_step", text: "Drag 29 to the second place.", dragNum: 29, targetSlot: 1, successMsg: "Well done!", lockTarget: true },
             { type: "final_confirm", text: "31 is the largest number." }
         ]
@@ -89,7 +89,7 @@ const LEVELS = [
             { type: "swap_step", text: "Drag 30 to the first place.", dragNum: 30, targetSlot: 0, successMsg: "Well done!", lockTarget: true },
             { type: "instruction", text: "Compare the ones digits of the remaining numbers.", highlight: "ones", highlightStones: "remaining" },
             { type: "tap", text: "Tap the smaller ones digit.", targetNum: 32, digitType: "ones", tapMode: "smallest", correctMsg: "Yes, 2 is smaller than 7.", highlight: "ones", highlightStones: "remaining" },
-            { type: "msg", text: "So, 32 is smaller than 37.", glowNums: [32, 37] },
+            { type: "msg", text: "So, 32 is smaller than 37.", glowNum: 32 },
             { type: "swap_step", text: "Drag 32 to the second place.", dragNum: 32, targetSlot: 1, successMsg: "Well done!", lockTarget: true },
             { type: "final_confirm", text: "37 is the largest number." }
         ]
@@ -133,7 +133,7 @@ const LEVELS = [
             { type: "msg", text: "Both the numbers have the same tens." },
             { type: "instruction", text: "Look at the ones digits now.", highlight: "ones", highlightStones: "remaining" },
             { type: "tap", text: "Tap the larger ones digit.", targetNum: 36, digitType: "ones", tapMode: "largest", correctMsg: "Yes, 6 is larger than 0.", highlight: "ones", highlightStones: "remaining" },
-            { type: "msg", text: "So, 36 is larger than 30.", glowNums: [36, 30] },
+            { type: "msg", text: "So, 36 is larger than 30.", glowNum: 36 },
             { type: "swap_step", text: "Drag 36 to the second place.", dragNum: 36, targetSlot: 1, successMsg: "Well done!", lockTarget: true },
             { type: "final_confirm", text: "30 is the smallest number." }
         ]
@@ -313,9 +313,30 @@ document.addEventListener("DOMContentLoaded", () => {
     initBatSprite();
     initFlyingWizard();
     preloadNeelSprite();
+    preloadAgniSprite();
     setupFXCanvas();
-    
-    loadLevel(0);
+
+    initSplashScreen();   // calls loadLevel(0) after the Start-button dissolve
+    buildNavMenu();
+
+    document.getElementById('navToggleBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleNavMenu();
+    });
+    document.addEventListener('pointerdown', (e) => {
+        if (!e.target.closest('#lbdNavMenu')) toggleNavMenu(false);
+    }, true);
+
+    // Unlock AudioContext + bgMusic on the very first user gesture.
+    // Browsers block autoplay until a pointer interaction; this catches it.
+    document.addEventListener('pointerdown', function unlockAudio() {
+        if (gameState.audioCtx && gameState.audioCtx.state === 'suspended') {
+            gameState.audioCtx.resume().catch(() => {});
+        }
+        const m = document.getElementById("bgMusic");
+        if (m && m.paused) { m.muted = false; m.play().catch(() => {}); }
+        document.removeEventListener('pointerdown', unlockAudio);
+    }, true);
 
     window.addEventListener("resize", handleResize);
     if (window.visualViewport) {
@@ -465,6 +486,7 @@ function playSynth(type) {
 function loadLevel(idx) {
     gameState.currentLevelIdx = idx;
     gameState.currentStepIdx = 0;
+    updateNavMenuActive();
     gameState.slotsLocked = [false, false, false];
     gameState.consecutiveErrors = 0;
     gameState.isWaitingForClick = false;
@@ -534,11 +556,12 @@ function loadLevel(idx) {
 }
 
 function scatterStones() {
-    // Start each stone at a distinct zone, then let JS roam them freely
+    // Stone is 440×280 px. Keep fully inside 1920×1080 with margin from edges.
+    // Zones spread across the full width so stones use the complete screen.
     const zones = [
-        { x: 120 + Math.random() * 180, y: 360 + Math.random() * 130 },
-        { x: 560 + Math.random() * 180, y: 170 + Math.random() * 130 },
-        { x: 1020 + Math.random() * 180, y: 300 + Math.random() * 130 },
+        { x:  80 + Math.random() * 200, y: 340 + Math.random() * 130 },
+        { x: 560 + Math.random() * 200, y: 180 + Math.random() * 130 },
+        { x: 1180 + Math.random() * 200, y: 310 + Math.random() * 130 },
     ];
     zones.sort(() => Math.random() - 0.5);
 
@@ -582,10 +605,10 @@ function blinkEyes(el) {
 
 function roamStone(el) {
     if (!el || !el.classList.contains("scattered")) return;
-    // Pick a new random position across nearly the full game-container
-    const x   = 120 + Math.random() * 1560;   // 120–1680 px (safe of pillars)
-    const y   = 150 + Math.random() * 530;    // 150–680 px (below banner)
-    const dur = 2200 + Math.random() * 1800;  // 2.2–4s per move
+    // Stone 440×280 px — keep fully within 1920×1080 (20 px margin each side)
+    const x   = 20  + Math.random() * (1920 - 440 - 40);  // 20–1460 px
+    const y   = 195 + Math.random() * (1080 - 280 - 215); // 195–585 px (below banner)
+    const dur = 2200 + Math.random() * 1800;               // 2.2–4 s per move
     el.style.transition = `left ${dur}ms ease-in-out, top ${dur}ms ease-in-out`;
     el.style.left = `${x}px`;
     el.style.top  = `${y}px`;
@@ -1468,7 +1491,8 @@ function spawnBalloons() {
         const video  = document.getElementById("transitionVideo");
         const climbNum = (gameState.currentLevelIdx % 6) + 1;
         video.src = `image/${climbNum} climb.mp4`;
-        video.load();
+        // No explicit video.load() — setting src triggers loading automatically.
+        // Calling load() after src causes a visible frame-reset flash.
         overlay.classList.add("active");
         video.play().catch(() => {});
         // Background music keeps playing; clip auto-closes after 2 s
@@ -1700,6 +1724,193 @@ function playNeelJumps(onDone) {
 }
 
 // --- NAVIGATION MENU ---
+function buildNavMenu() {
+    const dd = document.getElementById('navDropdown');
+    if (!dd) return;
+    dd.innerHTML = '';
+    let lastType = '';
+    LEVELS.forEach((lvl, idx) => {
+        const type = lvl.orderType;
+        if (type !== lastType) {
+            if (lastType) { const s = document.createElement('div'); s.className = 'nav-level-separator'; dd.appendChild(s); }
+            const h = document.createElement('div');
+            h.className = 'nav-part-header';
+            h.textContent = type === 'ascending' ? 'Part A: Smallest → Largest' : 'Part B: Largest → Smallest';
+            dd.appendChild(h);
+            lastType = type;
+        }
+        const btn = document.createElement('button');
+        btn.className = 'nav-level-btn';
+        btn.id = `nav-lbd-${idx}`;
+        const num = lvl.id.split('_')[1];
+        btn.textContent = lvl.mode === 'tutorial'
+            ? `★ Tutorial ${num}: ${lvl.initialOrder.join(', ')}`
+            : `  Practice ${num}: ${lvl.initialOrder.join(', ')}`;
+        btn.addEventListener('click', () => navigateToLevel(idx));
+        dd.appendChild(btn);
+    });
+}
+function updateNavMenuActive() {
+    document.querySelectorAll('.nav-level-btn').forEach((b, i) => b.classList.toggle('nav-active', i === gameState.currentLevelIdx));
+}
+function toggleNavMenu(force) {
+    const dd = document.getElementById('navDropdown');
+    if (!dd) return;
+    const show = force !== undefined ? force : dd.style.display !== 'block';
+    dd.style.display = show ? 'block' : 'none';
+    if (show) updateNavMenuActive();
+}
+function navigateToLevel(idx) {
+    toggleNavMenu(false);
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    clearIdleTimer(); clearNudgeTimer();
+    const nj = document.getElementById('neel-jumper'); if (nj) nj.remove();
+    gameState.pendingLevelIdx = idx;
+    const overlay = document.getElementById('transitionOverlay');
+    const video   = document.getElementById('transitionVideo');
+    const climbNum = (idx % 6) + 1;
+    video.src = `image/${climbNum} climb.mp4`;
+    overlay.classList.add('active');
+    video.play().catch(() => {});
+    setTimeout(completeTransition, 2000);
+}
+
+// --- AGNI GAME-COMPLETE ENDING ---
+let _agniEndingSprite = null;
+
+function preloadAgniSprite() {
+    _agniEndingSprite = new Image();
+    _agniEndingSprite.src = 'image/agni flying.png';
+}
+
+function showAgniEnding() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    const nj = document.getElementById('neel-jumper'); if (nj) nj.remove();
+
+    const vp = window.visualViewport;
+    const W  = vp ? Math.round(vp.width)  : window.innerWidth;
+    const H  = vp ? Math.round(vp.height) : window.innerHeight;
+
+    const cv = document.createElement('canvas');
+    cv.id = 'agni-ending';
+    cv.width = W; cv.height = H;
+    Object.assign(cv.style, {
+        position:'fixed', inset:'0', width:W+'px', height:H+'px',
+        zIndex:'8500', pointerEvents:'none'
+    });
+    document.body.appendChild(cv);
+    const ctx = cv.getContext('2d');
+
+    // Sprite — 2 cols × 1 row
+    const COLS = 2;
+    const FW = _agniEndingSprite ? _agniEndingSprite.naturalWidth  / COLS : 960;
+    const FH = _agniEndingSprite ? _agniEndingSprite.naturalHeight         : 1080;
+
+    // Agni about half the screen wide
+    const DW = Math.round(W * 0.52);
+    const DH = Math.round(DW * FH / FW);
+
+    let frame = 0, lastFlap = 0;
+    const FLAP_MS = 280;               // slow, relaxed wing flap
+
+    let agniY  = H + DH + 10;         // starts just below screen
+    const agniX = (W - DW) / 2;
+    const SPEED = H / 320;             // crosses full height in ~5.3 s — slow & majestic
+
+    // Orange circle dissolve — expands from screen centre after Agni exits
+    const MAX_R = Math.hypot(W / 2, H / 2) * 1.05;
+    let dissolveR = 0;
+    const DISSOLVE_SPD = MAX_R / 80;   // ~1.3 s to fill at 60 fps — smooth
+
+    let phase = 'fly';   // fly → dissolve → text
+    let shadowA = 0, textA = 0, doneFired = false;
+
+    const tick = now => {
+        ctx.clearRect(0, 0, W, H);
+
+        // ── FLY ─────────────────────────────────────────────────────────────
+        if (phase === 'fly') {
+            agniY -= SPEED;
+            if (now - lastFlap >= FLAP_MS) { frame = (frame + 1) % COLS; lastFlap = now; }
+            if (_agniEndingSprite) {
+                ctx.drawImage(_agniEndingSprite, frame * FW, 0, FW, FH, agniX, agniY, DW, DH);
+            }
+            if (agniY + DH < 0) phase = 'dissolve';
+        }
+
+        // ── ORANGE CIRCLE DISSOLVE ───────────────────────────────────────────
+        if (phase === 'dissolve' || phase === 'text') {
+            dissolveR = Math.min(MAX_R, dissolveR + DISSOLVE_SPD);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(W / 2, H / 2, dissolveR, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fillStyle = '#c95000';
+            ctx.fill();
+            ctx.restore();
+            if (dissolveR >= MAX_R && phase === 'dissolve') phase = 'text';
+        }
+
+        // ── TEXT ─────────────────────────────────────────────────────────────
+        if (phase === 'text') {
+            const fs = Math.max(28, Math.round(W * 0.065));
+            const tx = W / 2, ty = H * 0.47;
+            ctx.save();
+            ctx.font = `${fs}px 'Lilita One', cursive`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+            // Dark shadow appears first
+            shadowA = Math.min(1, shadowA + 0.020);
+            ctx.globalAlpha = shadowA * 0.85;
+            ctx.fillStyle = '#1c0400';
+            ctx.fillText('Steps are fixed!', tx + fs * 0.10, ty + fs * 0.10);
+
+            // White text fades in after shadow
+            if (shadowA > 0.45) {
+                textA = Math.min(1, textA + 0.025);
+                ctx.globalAlpha = textA;
+                ctx.strokeStyle = '#5a1800'; ctx.lineWidth = fs * 0.09;
+                ctx.strokeText('Steps are fixed!', tx, ty);
+                ctx.fillStyle = '#fff8e0';
+                ctx.fillText('Steps are fixed!', tx, ty);
+            }
+            ctx.restore();
+
+            // Game ends — canvas stays, rAF loop stops
+            if (textA >= 1 && !doneFired) doneFired = true;
+        }
+
+        if (!doneFired) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
+
+// --- PRE-GAME SPLASH SCREEN ---
+function initSplashScreen() {
+    const splash = document.getElementById('splashScreen');
+    if (!splash) { loadLevel(0); return; }          // fallback if element missing
+
+    const btn = document.getElementById('startBtn');
+    if (!btn)   { loadLevel(0); splash.remove(); return; }
+
+    btn.addEventListener('pointerdown', () => {
+        if (splash.classList.contains('dissolving')) return;
+
+        // Honour browser autoplay policy — first gesture unlocks audio
+        setupAudio();
+        startBackgroundMusic();
+
+        // Trigger the circle-dissolve animation
+        splash.classList.add('dissolving');
+
+        // After animation completes: remove splash and start the game
+        setTimeout(() => {
+            splash.remove();
+            loadLevel(0);
+        }, 780);
+
+    }, { once: true });
+}
 
 function completeTransition() {
     const overlay = document.getElementById("transitionOverlay");
@@ -1707,15 +1918,18 @@ function completeTransition() {
     overlay.classList.remove("active");
     const video = document.getElementById("transitionVideo");
     video.pause();
-    video.currentTime = 0;
+    // Do NOT reset currentTime here — the src changes on the next play,
+    // so resetting now causes a visible frame-jump while the overlay fades out.
     let nextIdx;
+    let naturalEnd = false;
     if (gameState.pendingLevelIdx !== null) {
         nextIdx = gameState.pendingLevelIdx;
         gameState.pendingLevelIdx = null;
     } else {
         nextIdx = gameState.currentLevelIdx + 1;
-        if (nextIdx >= LEVELS.length) nextIdx = 0;
+        if (nextIdx >= LEVELS.length) { naturalEnd = true; nextIdx = 0; }
     }
+    if (naturalEnd) { showAgniEnding(); return; }
     loadLevel(nextIdx);
 }
 
@@ -1728,7 +1942,13 @@ function triggerVictory() {
     speakText("Yay! Steps are fixed.");
     playSynth('victory');
 
-    // Close ALL stones' eyes at this moment (last stone wasn't faded yet)
+    // Remove any lingering digit highlights and stone glows before fading
+    document.querySelectorAll(".digit").forEach(d => d.classList.remove("highlight"));
+    document.querySelectorAll(".number-step").forEach(s =>
+        s.classList.remove("stone-glow-white", "stone-glow-green", "stone-glow-red")
+    );
+
+    // Close ALL stones' eyes (fade/sleep all stones)
     gameState.slots.forEach(el => {
         if (el && !el.classList.contains("faded")) {
             el.classList.add("faded");

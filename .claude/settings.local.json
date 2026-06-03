@@ -20,7 +20,13 @@
       "Bash(findstr /i \"neel\")",
       "Bash(python3 -c \"from PIL import Image; img=Image.open\\('image/pre lbd.png'\\); print\\(img.size, img.mode\\)\")",
       "Bash(python -c \"from PIL import Image; img=Image.open\\('image/pre lbd.png'\\); print\\(img.size, img.mode\\)\")",
-      "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $img=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/pre lbd.png'\\\\''\\)\\); Write-Host $img.Width $img.Height; $img.Dispose\\(\\)')"
+      "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $img=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/pre lbd.png'\\\\''\\)\\); Write-Host $img.Width $img.Height; $img.Dispose\\(\\)')",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('d:/CG/the story night game/image/pre lbd.png'\\); print\\('BG:', img.size\\); img2=Image.open\\('d:/CG/the story night game/image/start button pre lbd..png'\\); print\\('BTN:', img2.size\\)\")",
+      "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/pre lbd.png'\\\\''\\)\\); Write-Host '\\\\''BG'\\\\'' $i.Width $i.Height; $i.Dispose\\(\\); $j=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/start button pre lbd..png'\\\\''\\)\\); Write-Host '\\\\''BTN'\\\\'' $j.Width $j.Height; $j.Dispose\\(\\)')",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('d:/CG/the story night game/image/Agni Sprite Sheet..png'\\); print\\(img.size\\)\")",
+      "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/Agni Sprite Sheet..png'\\\\''\\)\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\)')",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('d:/CG/the story night game/image/agni flying.png'\\); print\\(img.size, img.mode\\)\")",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\agni flying.png\"\\); Write-Host \"$\\($i.Width\\) x $\\($i.Height\\) mode=$\\($i.PixelFormat\\)\"; $i.Dispose\\(\\))"
     ]
   }
 }

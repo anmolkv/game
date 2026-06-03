@@ -75,6 +75,12 @@
 <!-- IP Mode Check Button -->
             <button class="check-btn" id="checkBtn" style="display:none">✓ Check</button>
 
+            <!-- Level Navigation Menu -->
+            <div class="lbd-nav-menu" id="lbdNavMenu">
+                <button class="nav-toggle-btn" id="navToggleBtn">☰</button>
+                <div class="nav-dropdown" id="navDropdown"></div>
+            </div>
+
         </div>
         </div><!-- /game-wrapper -->
     </div>
@@ -85,6 +91,14 @@
     </div>
 
     <audio id="bgMusic" src="SFX/BACKGROUND/SFX 1.mp3" loop muted preload="auto"></audio>
+
+    <!-- Pre-game splash screen — removed after Start button dissolve -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-wrap" id="splashWrap">
+            <img src="image/pre lbd.png"                   class="splash-bg-img"  draggable="false" />
+            <img src="image/start button pre lbd..png"     class="splash-btn-img" id="startBtn" draggable="false" />
+        </div>
+    </div>
 
     <script src="game.js?v=11.3"></script>
 </body>
