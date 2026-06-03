@@ -248,7 +248,7 @@ function showFlyingWizard(correct = true) {
     const gameContainer = document.getElementById("gameContainer");
     const cr = gameContainer.getBoundingClientRect();
 
-    const wh = Math.round(320 * gameState.scale);
+    const wh = Math.round(360 * gameState.scale);
     const screenY = cr.top + cr.height * 0.82 - wh / 2;
 
     const wiz = document.createElement("img");
@@ -1811,35 +1811,46 @@ function showAgniEnding() {
     const DH = Math.round(DW * FH / FW);
 
     let frame = 0, lastFlap = 0;
-    const FLAP_MS = 280;               // slow, relaxed wing flap
+    const FLAP_MS = 160;               // snappy flap while flying behind text
 
-    let agniY  = H + DH + 10;         // starts just below screen
+    let agniY  = H + DH + 10;         // starts below screen
     const agniX = (W - DW) / 2;
-    const SPEED = H / 320;             // crosses full height in ~5.3 s — slow & majestic
+    const AGNI_SPEED = H / 200;        // a little faster — ~3.3 s to cross
 
-    // Orange circle dissolve — expands from screen centre after Agni exits
+    // Orange circle dissolve (plays FIRST)
     const MAX_R = Math.hypot(W / 2, H / 2) * 1.05;
     let dissolveR = 0;
-    const DISSOLVE_SPD = MAX_R / 80;   // ~1.3 s to fill at 60 fps — smooth
+    const DISSOLVE_SPD = MAX_R / 80;   // ~1.3 s to fill
 
-    let phase = 'fly';   // fly → dissolve → text
+    // Sequence: dissolve → text → fly (Agni flies behind text) → done
+    let phase = 'dissolve';
     let shadowA = 0, textA = 0, doneFired = false;
+
+    // Reusable text draw — used in both text and fly phases
+    const drawText = () => {
+        const fs = Math.max(28, Math.round(W * 0.065));
+        const tx = W / 2, ty = H * 0.47;
+        ctx.save();
+        ctx.font = `${fs}px 'Lilita One', cursive`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.globalAlpha = Math.min(1, shadowA) * 0.85;
+        ctx.fillStyle = '#1c0400';
+        ctx.fillText('Steps are fixed!', tx + fs * 0.10, ty + fs * 0.10);
+        if (shadowA > 0.45) {
+            ctx.globalAlpha = Math.min(1, textA);
+            ctx.strokeStyle = '#5a1800'; ctx.lineWidth = fs * 0.09;
+            ctx.strokeText('Steps are fixed!', tx, ty);
+            ctx.fillStyle = '#fff8e0';
+            ctx.fillText('Steps are fixed!', tx, ty);
+        }
+        ctx.restore();
+    };
 
     const tick = now => {
         ctx.clearRect(0, 0, W, H);
 
-        // ── FLY ─────────────────────────────────────────────────────────────
-        if (phase === 'fly') {
-            agniY -= SPEED;
-            if (now - lastFlap >= FLAP_MS) { frame = (frame + 1) % COLS; lastFlap = now; }
-            if (_agniEndingSprite) {
-                ctx.drawImage(_agniEndingSprite, frame * FW, 0, FW, FH, agniX, agniY, DW, DH);
-            }
-            if (agniY + DH < 0) phase = 'dissolve';
-        }
-
-        // ── ORANGE CIRCLE DISSOLVE ───────────────────────────────────────────
-        if (phase === 'dissolve' || phase === 'text') {
+        // ── 1. ORANGE CIRCLE DISSOLVE ────────────────────────────────────────
+        if (phase === 'dissolve') {
             dissolveR = Math.min(MAX_R, dissolveR + DISSOLVE_SPD);
             ctx.save();
             ctx.beginPath();
@@ -1848,36 +1859,37 @@ function showAgniEnding() {
             ctx.fillStyle = '#c95000';
             ctx.fill();
             ctx.restore();
-            if (dissolveR >= MAX_R && phase === 'dissolve') phase = 'text';
+            if (dissolveR >= MAX_R) phase = 'text';
         }
 
-        // ── TEXT ─────────────────────────────────────────────────────────────
+        // ── 2. TEXT FADE-IN on solid orange ──────────────────────────────────
         if (phase === 'text') {
-            const fs = Math.max(28, Math.round(W * 0.065));
-            const tx = W / 2, ty = H * 0.47;
-            ctx.save();
-            ctx.font = `${fs}px 'Lilita One', cursive`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-
-            // Dark shadow appears first
+            ctx.fillStyle = '#c95000';
+            ctx.fillRect(0, 0, W, H);
             shadowA = Math.min(1, shadowA + 0.020);
-            ctx.globalAlpha = shadowA * 0.85;
-            ctx.fillStyle = '#1c0400';
-            ctx.fillText('Steps are fixed!', tx + fs * 0.10, ty + fs * 0.10);
+            if (shadowA > 0.45) textA = Math.min(1, textA + 0.025);
+            drawText();
+            if (textA >= 1) phase = 'fly';   // launch Agni once text is fully shown
+        }
 
-            // White text fades in after shadow
-            if (shadowA > 0.45) {
-                textA = Math.min(1, textA + 0.025);
-                ctx.globalAlpha = textA;
-                ctx.strokeStyle = '#5a1800'; ctx.lineWidth = fs * 0.09;
-                ctx.strokeText('Steps are fixed!', tx, ty);
-                ctx.fillStyle = '#fff8e0';
-                ctx.fillText('Steps are fixed!', tx, ty);
+        // ── 3. AGNI FLIES BEHIND TEXT ────────────────────────────────────────
+        if (phase === 'fly') {
+            // Orange background
+            ctx.fillStyle = '#c95000';
+            ctx.fillRect(0, 0, W, H);
+
+            // Agni drawn BEFORE text so text always sits on top
+            agniY -= AGNI_SPEED;
+            if (now - lastFlap >= FLAP_MS) { frame = (frame + 1) % COLS; lastFlap = now; }
+            if (_agniEndingSprite) {
+                ctx.drawImage(_agniEndingSprite, frame * FW, 0, FW, FH, agniX, agniY, DW, DH);
             }
-            ctx.restore();
 
-            // Game ends — canvas stays, rAF loop stops
-            if (textA >= 1 && !doneFired) doneFired = true;
+            // Text always on top of Agni
+            drawText();
+
+            // Agni exits top → stop loop, keep orange+text visible
+            if (agniY + DH < 0 && !doneFired) doneFired = true;
         }
 
         if (!doneFired) requestAnimationFrame(tick);
@@ -1888,15 +1900,29 @@ function showAgniEnding() {
 // --- PRE-GAME SPLASH SCREEN ---
 function initSplashScreen() {
     const splash = document.getElementById('splashScreen');
-    if (!splash) { loadLevel(0); return; }          // fallback if element missing
+    if (!splash) { loadLevel(0); return; }
+
+    // Try to start music immediately while the splash is visible
+    setupAudio();
+    startBackgroundMusic();
+
+    // On any touch/click of the splash (not only the button) unlock audio
+    // — handles browsers that block muted autoplay until a gesture
+    splash.addEventListener('pointerdown', () => {
+        if (gameState.audioCtx && gameState.audioCtx.state === 'suspended') {
+            gameState.audioCtx.resume().catch(() => {});
+        }
+        const m = document.getElementById('bgMusic');
+        if (m && (m.paused || m.muted)) { m.muted = false; m.play().catch(() => {}); }
+    });
 
     const btn = document.getElementById('startBtn');
-    if (!btn)   { loadLevel(0); splash.remove(); return; }
+    if (!btn) { loadLevel(0); splash.remove(); return; }
 
     btn.addEventListener('pointerdown', () => {
         if (splash.classList.contains('dissolving')) return;
 
-        // Honour browser autoplay policy — first gesture unlocks audio
+        // Ensure audio is fully unlocked on the Start gesture
         setupAudio();
         startBackgroundMusic();
 
