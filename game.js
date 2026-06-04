@@ -53,8 +53,8 @@ const LEVELS = [
         id: "tutorial_1", initialOrder: [31, 13, 29], correctSorted: [13, 29, 31],
         orderType: "ascending", mode: "tutorial",
         steps: [
-            { type: "msg", text: "Let us put the steps in order." },
-            { type: "show_slots", text: "From smallest to largest." },
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
+            { type: "show_slots", text: "Let us put the steps in order." },
             { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
             { type: "tap", text: "Tap the smallest tens digit.", targetNum: 13, digitType: "tens", tapMode: "smallest", correctMsg: "Yes, 1 is the smallest tens digit.", highlight: "tens", highlightStones: true },
             { type: "msg", text: "So, 13 is the smallest number.", glowNum: 13 },
@@ -79,8 +79,8 @@ const LEVELS = [
         id: "tutorial_2", initialOrder: [37, 30, 32], correctSorted: [30, 32, 37],
         orderType: "ascending", mode: "tutorial",
         steps: [
-            { type: "msg", text: "Put the steps in order." },
-            { type: "show_slots", text: "From smallest to largest." },
+            { type: "msg", text: "Put the steps in order.", silent: true },
+            { type: "show_slots", text: "Put the steps in order." },
             { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
             { type: "msg", text: "All numbers have the same tens." },
             { type: "instruction", text: "Look at the ones digits now.", highlight: "ones", highlightStones: true },
@@ -123,8 +123,8 @@ const LEVELS = [
         id: "tutorial_3", initialOrder: [30, 47, 36], correctSorted: [47, 36, 30],
         orderType: "descending", mode: "tutorial",
         steps: [
-            { type: "msg", text: "Put the steps in order." },
-            { type: "show_slots", text: "From largest to smallest." },
+            { type: "msg", text: "Put the steps in order.", silent: true },
+            { type: "show_slots", text: "Put the steps in order." },
             { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
             { type: "tap", text: "Tap the largest tens digit.", targetNum: 47, digitType: "tens", tapMode: "largest", correctMsg: "Yes, 4 is the largest tens digit.", highlight: "tens", highlightStones: true },
             { type: "msg", text: "So, 47 is the largest number.", glowNum: 47 },
@@ -313,6 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initBatSprite();
     initFlyingWizard();
     preloadNeelSprite();
+    preloadNeelWatching();
     preloadAgniSprite();
     setupFXCanvas();
 
@@ -552,31 +553,44 @@ function loadLevel(idx) {
     // Always scatter stones for the animated intro on every LBD
     scatterStones();
 
+    // Hide the HUD (wizard template) during the scatter/sway intro
+    const introHud = document.querySelector(".instruction-hud");
+    if (introHud) introHud.classList.add("hud-scatter");
+
     runStep();
 }
 
 function scatterStones() {
-    // Stone is 440×280 px. Keep fully inside 1920×1080 with margin from edges.
-    // Zones spread across the full width so stones use the complete screen.
-    const zones = [
-        { x:  80 + Math.random() * 200, y: 340 + Math.random() * 130 },
-        { x: 560 + Math.random() * 200, y: 180 + Math.random() * 130 },
-        { x: 1180 + Math.random() * 200, y: 310 + Math.random() * 130 },
+    // Stones stacked in a vertical column, centred horizontally.
+    // Stone: 500 × 320 px. Canvas centre = 960 px → left edge = 710 px.
+    const centreX = 710;
+
+    const positions = [
+        { x: centreX, y: 190 },   // top
+        { x: centreX, y: 470 },   // middle
+        { x: centreX, y: 750 },   // bottom
     ];
-    zones.sort(() => Math.random() - 0.5);
+
+    // Negative delays pre-position each stone at the right phase of the 6 s cycle:
+    //   0 % = 0 s → translateX(-500px) = far LEFT  → moves right first
+    //  50 % = 3 s → translateX(+500px) = far RIGHT → moves left first
+    const delays = ['0s', '-3s', '0s'];   // top: L→R,  mid: R→L,  bottom: L→R
 
     gameState.slots.forEach((el, i) => {
         if (!el) return;
         el.style.transition = "none";
-        el.style.left = `${zones[i].x}px`;
-        el.style.top  = `${zones[i].y}px`;
+        el.style.left = `${positions[i].x}px`;
+        el.style.top  = `${positions[i].y}px`;
         el.classList.remove("drifting");
         el.classList.add("scattered");
-        // Staggered roam start so stones don't move in sync
-        setTimeout(() => roamStone(el), i * 400);
-        // Staggered blink start
+        el.style.animationDelay = delays[i];
         el._blinkTimer = setTimeout(() => blinkEyes(el), 1000 + i * 800 + Math.random() * 1000);
     });
+
+    // Neel watches from the bottom-left on every LBD except the last one
+    if (gameState.currentLevelIdx < LEVELS.length - 1) {
+        showNeelWatching();
+    }
 }
 
 function blinkEyes(el) {
@@ -1075,7 +1089,14 @@ function runStep() {
     }
     
     setInstruction(step.text);
-    
+
+    // Animated arrow in HUD — only on show_slots steps that request it
+    const _hud = document.querySelector(".instruction-hud");
+    if (_hud) {
+        _hud.classList.remove("show-arrow");
+        if (step.showArrow) _hud.classList.add("show-arrow");
+    }
+
     // Clear temporary glows and highlights
     document.querySelectorAll(".digit").forEach(d => d.classList.remove("highlight"));
     document.querySelectorAll(".number-step").forEach(s => {
@@ -1101,27 +1122,54 @@ function runStep() {
             const el = document.getElementById(`step_${step.glowNum}`);
             if (el) el.querySelectorAll(".digit").forEach(d => d.classList.add("highlight"));
         }
-        const gap = gameState.currentStepIdx === 0 ? 2000 : 0;
-        speakText(step.text, () => setTimeout(nextStep, gap));
+        if (step.silent) {
+            setTimeout(hideNeelWatching, 2400);   // slide out 600 ms before stones move
+            setTimeout(nextStep, 3000);
+        } else {
+            const gap = gameState.currentStepIdx === 0 ? 2000 : 0;
+            speakText(step.text, () => setTimeout(nextStep, gap));
+        }
     }
     else if (step.type === "show_slots") {
+        // Restore wizard question template now that intro sway is over
+        const introHud = document.querySelector(".instruction-hud");
+        if (introHud) introHud.classList.remove("hud-scatter");
+
         document.getElementById("slotsContainer").style.transition = "opacity 0.8s ease";
         document.getElementById("slotsContainer").style.opacity = "1";
 
-        // Stop roaming + blinking, reset eyes, slow-animate to slots
+        // Capture each stone's CURRENT visual position (includes sway transform),
+        // write it back to style.left/top, then remove the animation so the stone
+        // is stationary at exactly that spot — ready for a smooth slot animation.
+        const cRect = document.getElementById("gameContainer").getBoundingClientRect();
         gameState.slots.forEach(el => {
             if (!el) return;
             if (el._roamTimer)  { clearTimeout(el._roamTimer);  el._roamTimer  = null; }
             if (el._blinkTimer) { clearTimeout(el._blinkTimer); el._blinkTimer = null; }
+
+            // Freeze at current visual position before clearing transform
+            const r = el.getBoundingClientRect();
+            el.style.transition   = "none";
+            el.style.left = `${(r.left - cRect.left) / gameState.scale}px`;
+            el.style.top  = `${(r.top  - cRect.top)  / gameState.scale}px`;
+
+            el.classList.remove("scattered");
+            el.style.animationDelay = "";
+
             // Reset eye state
             const open   = el.querySelector(".eyes-open");
             const closed = el.querySelector(".eyes-closed");
             if (open)   open.style.display   = "";
             if (closed) closed.style.display = "";
-            el.classList.remove("scattered");
             el.classList.add("drifting");
         });
-        renderSlots(true, true); // slow smooth return
+        renderSlots(true, true); // animate from captured position → slots
+
+        // Hide arrow separators — they appear only when the tap instruction arrives
+        document.querySelectorAll(".slot-separator").forEach(s => {
+            s.style.transition = "none";
+            s.style.opacity    = "0";
+        });
 
         if (level.mode === "practice") {
             speakText(step.text);
@@ -1143,6 +1191,11 @@ function runStep() {
         speakText(step.text, () => nextStep());
     }
     else if (step.type === "tap") {
+        // Reveal arrow separators when the tap instruction arrives
+        document.querySelectorAll(".slot-separator").forEach(s => {
+            s.style.transition = "opacity 0.6s ease";
+            s.style.opacity    = "1";
+        });
         gameState.isWaitingForClick = true;
         gameState.targetDigitClick = { num: step.targetNum, type: step.digitType, tapMode: step.tapMode || "smallest" };
         applyDigitHighlights(step.highlight, step.highlightStones);
@@ -1159,7 +1212,12 @@ function runStep() {
         if (dragTarget) startNudgeTimer("drag", dragTarget, step.targetSlot);
     }
     else if (step.type === "final_confirm") {
-        // step.text IS the final confirmation message (e.g. "31 is the largest number.")
+        // Hide arrow separators on the final confirmation slide
+        document.querySelectorAll(".slot-separator").forEach(s => {
+            s.style.transition = "opacity 0.3s ease";
+            s.style.opacity    = "0";
+        });
+
         const remainingEl = gameState.slots.find((el, idx) => !gameState.slotsLocked[idx]);
         if (remainingEl) {
             const remainingIdx = gameState.slots.indexOf(remainingEl);
@@ -1478,25 +1536,31 @@ const BALLOON_POP_FILTERS = {
     "image/Group 2598.png": "brightness(0.85) saturate(0)",                               // ghost white
 };
 
-function spawnBalloons() {
+function spawnBalloons(onBeforeTransition) {
     const container = document.getElementById("gameContainer");
     const totalBalloons = 14;
     let poppedOrGone = 0;
     let overlayShown = false;
 
+    function doTransition() {
+        const overlay = document.getElementById("transitionOverlay");
+        const video   = document.getElementById("transitionVideo");
+        const climbNum = (gameState.currentLevelIdx % 6) + 1;
+        video.src = `image/${climbNum} climb.mp4`;
+        overlay.classList.add("active");
+        video.play().catch(() => {});
+        setTimeout(completeTransition, 2000);
+    }
+
     function showOverlay() {
         if (overlayShown) return;
         overlayShown = true;
-        const overlay = document.getElementById("transitionOverlay");
-        const video  = document.getElementById("transitionVideo");
-        const climbNum = (gameState.currentLevelIdx % 6) + 1;
-        video.src = `image/${climbNum} climb.mp4`;
-        // No explicit video.load() — setting src triggers loading automatically.
-        // Calling load() after src causes a visible frame-reset flash.
-        overlay.classList.add("active");
-        video.play().catch(() => {});
-        // Background music keeps playing; clip auto-closes after 2 s
-        setTimeout(completeTransition, 2000);
+        if (typeof onBeforeTransition === 'function') {
+            // Run "Yay!" + staircase + Neel first, then transition
+            onBeforeTransition(doTransition);
+        } else {
+            doTransition();
+        }
     }
 
     function checkAllDone() {
@@ -1612,6 +1676,68 @@ function preloadNeelSprite() {
     _neelSprite.src = 'image/Neel jump poses.png';
 }
 
+// --- NEEL WATCHING (intro sway screen) ---
+let _neelWatchImg = null;
+
+function preloadNeelWatching() {
+    _neelWatchImg = new Image();
+    _neelWatchImg.onerror = () => {
+        // fallback to existing image if neel face.png not saved yet
+        _neelWatchImg = new Image();
+        _neelWatchImg.src = 'image/neel looking top.png';
+    };
+    _neelWatchImg.src = 'image/neel face.png';
+}
+
+function showNeelWatching() {
+    hideNeelWatching();
+
+    const draw = () => {
+        const img = _neelWatchImg;
+        if (!img || !img.naturalWidth) return;
+
+        // Full image, no background removal, small size
+        const DW = 260;
+        const DH = Math.round(DW * img.naturalHeight / img.naturalWidth);
+        const topPos = 1080 - DH;   // bottom of Neel touches the screen edge
+
+        const cv = document.createElement('canvas');
+        cv.id     = 'neel-watching';
+        cv.width  = DW;
+        cv.height = DH;
+        Object.assign(cv.style, {
+            position:      'absolute',
+            left:          '80px',
+            top:           `${topPos}px`,
+            width:         DW + 'px',
+            height:        DH + 'px',
+            pointerEvents: 'none',
+            zIndex:        '60',
+            opacity:       '1'
+        });
+
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, DW, DH);
+
+        document.getElementById('playground').appendChild(cv);
+    };
+
+    if (_neelWatchImg && _neelWatchImg.complete && _neelWatchImg.naturalWidth) {
+        draw();
+    } else if (_neelWatchImg) {
+        _neelWatchImg.addEventListener('load', draw, { once: true });
+    }
+}
+
+function hideNeelWatching() {
+    const el = document.getElementById('neel-watching');
+    if (!el) return;
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    el.style.opacity    = '0';
+    el.style.transform  = 'translateX(-300px)';   // slide behind the left pillar
+    setTimeout(() => el.remove(), 550);
+}
+
 function playNeelJumps(onDone) {
     const old = document.getElementById('neel-jumper');
     if (old) old.remove();
@@ -1656,13 +1782,11 @@ function playNeelJumps(onDone) {
     // Neel image (1920×1080): characters are vertically centred in their frame —
     // feet sit at ~68 % of frame height (not 80 %).  Stone flat top surface is
     // at roughly p.y + 70 within the 280 px stone element.
-    const targets = gameState.slots.map((_, i) => {
-        const p = getSlotPos(i);
-        return {
-            x: p.x + 250 - DW / 2,
-            y: p.y + 70 - Math.round(DH * 0.68)
-        };
-    });
+    // Use actual stone positions (style.left/top) so Neel follows staircase formation
+    const targets = gameState.slots.map((el) => ({
+        x: parseFloat(el.style.left) + 250 - DW / 2,
+        y: parseFloat(el.style.top)  + 70 - Math.round(DH * 0.68)
+    }));
 
     const wps = [
         { x: -DW - 70, y: targets[0].y },   // off-screen left (entry)
@@ -1960,6 +2084,18 @@ function completeTransition() {
 }
 
 // --- VICTORY / CELEBRATION ---
+function formStaircase(callback) {
+    // Left stone goes down, middle stays, right stone goes up — ascending staircase
+    const offsets = [160, 0, -160];
+    gameState.slots.forEach((el, i) => {
+        if (!el) return;
+        const t = parseFloat(el.style.top);
+        el.style.transition = 'top 0.9s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        el.style.top = `${t + offsets[i]}px`;
+    });
+    setTimeout(callback, 1000);
+}
+
 function triggerVictory() {
     gameState.levelComplete = true;
     clearNudgeTimer();
@@ -1974,15 +2110,23 @@ function triggerVictory() {
         s.classList.remove("stone-glow-white", "stone-glow-green", "stone-glow-red")
     );
 
-    // Close ALL stones' eyes (fade/sleep all stones)
+    // Close ALL stones' eyes immediately — balloon screen shows them sleeping
     gameState.slots.forEach(el => {
         if (el && !el.classList.contains("faded")) {
             el.classList.add("faded");
             el.classList.remove("drifting");
         }
+        if (el) el.classList.remove("drifting");
     });
 
-    playNeelJumps(() => spawnBalloons());
+    // Balloons appear WITH "Yay!" text; after all popped → staircase + Neel → transition
+    spawnBalloons((doTransition) => {
+        setTimeout(() => {
+            formStaircase(() => {
+                playNeelJumps(() => doTransition());
+            });
+        }, 700);
+    });
 }
 
 

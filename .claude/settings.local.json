@@ -26,7 +26,9 @@
       "Bash(python3 -c \"from PIL import Image; img=Image.open\\('d:/CG/the story night game/image/Agni Sprite Sheet..png'\\); print\\(img.size\\)\")",
       "Bash(powershell -command 'Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\\(Resolve-Path '\\\\''image/Agni Sprite Sheet..png'\\\\''\\)\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\)')",
       "Bash(python3 -c \"from PIL import Image; img=Image.open\\('d:/CG/the story night game/image/agni flying.png'\\); print\\(img.size, img.mode\\)\")",
-      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\agni flying.png\"\\); Write-Host \"$\\($i.Width\\) x $\\($i.Height\\) mode=$\\($i.PixelFormat\\)\"; $i.Dispose\\(\\))"
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\agni flying.png\"\\); Write-Host \"$\\($i.Width\\) x $\\($i.Height\\) mode=$\\($i.PixelFormat\\)\"; $i.Dispose\\(\\))",
+      "Bash(git restore *)",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\neel looking top.png\"\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\))"
     ]
   }
 }

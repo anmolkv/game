@@ -229,6 +229,19 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* Animated arrow that appears alongside the instruction text on slide 2 */
+.instruction-hud.show-arrow .instruction-bubble span::after {
+    content: " ▶";
+    color: #ffd700;
+    display: inline-block;
+    animation: hud-arrow-pulse 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes hud-arrow-pulse {
+    from { opacity: 0.4; transform: translateX(0px);  }
+    to   { opacity: 1.0; transform: translateX(10px); }
+}
+
 /* --- GAME FIELD & SLOTS --- */
 .game-field {
     position: absolute;
@@ -360,6 +373,23 @@ body {
 /* Floating drift effect for unplaced steps */
 .number-step.drifting:not(.dragging) {
     animation: float-drift 4s infinite ease-in-out alternate;
+}
+
+/* Vertical-stack intro — smooth sine-wave sway left/right */
+.number-step.scattered {
+    animation: stone-horiz-sway 6s linear infinite;
+}
+
+/* Constant-speed linear sweep — left pillar ↔ right pillar at fixed pace */
+@keyframes stone-horiz-sway {
+    0%   { transform: translateX(-500px); }
+    50%  { transform: translateX( 500px); }
+    100% { transform: translateX(-500px); }
+}
+
+/* Hide the entire HUD (wizard + text) during the scatter intro screen */
+.instruction-hud.hud-scatter {
+    display: none;
 }
 
 .number-step:active, .number-step.dragging {
