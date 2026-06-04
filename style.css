@@ -387,7 +387,7 @@ body {
     100% { transform: translateX(-500px); }
 }
 
-/* Hide the entire HUD (wizard + text) during the scatter intro screen */
+/* No HUD at all during the scatter/wobble intro screen */
 .instruction-hud.hud-scatter {
     display: none;
 }
@@ -957,9 +957,9 @@ body {
 .splash-btn-img {
     position: absolute;
     left: 50%;
-    bottom: -3%;
+    bottom: 2%;
     transform: translateX(-50%);
-    width: 28%;
+    width: 20%;
     cursor: pointer;
     animation: splash-btn-pulse 1.4s ease-in-out infinite;
 }

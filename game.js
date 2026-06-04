@@ -55,6 +55,7 @@ const LEVELS = [
         steps: [
             { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Let us put the steps in order." },
+            { type: "msg", text: "From smallest to largest.", showArrows: true },
             { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
             { type: "tap", text: "Tap the smallest tens digit.", targetNum: 13, digitType: "tens", tapMode: "smallest", correctMsg: "Yes, 1 is the smallest tens digit.", highlight: "tens", highlightStones: true },
             { type: "msg", text: "So, 13 is the smallest number.", glowNum: 13 },
@@ -71,6 +72,7 @@ const LEVELS = [
         id: "practice_1", initialOrder: [48, 62, 26], correctSorted: [26, 48, 62],
         orderType: "ascending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from smallest to largest." }
         ]
     },
@@ -80,7 +82,8 @@ const LEVELS = [
         orderType: "ascending", mode: "tutorial",
         steps: [
             { type: "msg", text: "Put the steps in order.", silent: true },
-            { type: "show_slots", text: "Put the steps in order." },
+            { type: "show_slots", text: "Let us put the steps in order." },
+            { type: "msg", text: "From smallest to largest.", showArrows: true },
             { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
             { type: "msg", text: "All numbers have the same tens." },
             { type: "instruction", text: "Look at the ones digits now.", highlight: "ones", highlightStones: true },
@@ -99,6 +102,7 @@ const LEVELS = [
         id: "practice_2", initialOrder: [76, 71, 73], correctSorted: [71, 73, 76],
         orderType: "ascending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from smallest to largest." }
         ]
     },
@@ -107,6 +111,7 @@ const LEVELS = [
         id: "practice_3", initialOrder: [31, 35, 13], correctSorted: [13, 31, 35],
         orderType: "ascending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from smallest to largest." }
         ]
     },
@@ -115,6 +120,7 @@ const LEVELS = [
         id: "practice_4", initialOrder: [64, 60, 59], correctSorted: [59, 60, 64],
         orderType: "ascending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from smallest to largest." }
         ]
     },
@@ -124,7 +130,8 @@ const LEVELS = [
         orderType: "descending", mode: "tutorial",
         steps: [
             { type: "msg", text: "Put the steps in order.", silent: true },
-            { type: "show_slots", text: "Put the steps in order." },
+            { type: "show_slots", text: "Let us put the steps in order." },
+            { type: "msg", text: "From largest to smallest.", showArrows: true },
             { type: "instruction", text: "Look at the tens digits.", highlight: "tens", highlightStones: true },
             { type: "tap", text: "Tap the largest tens digit.", targetNum: 47, digitType: "tens", tapMode: "largest", correctMsg: "Yes, 4 is the largest tens digit.", highlight: "tens", highlightStones: true },
             { type: "msg", text: "So, 47 is the largest number.", glowNum: 47 },
@@ -143,6 +150,7 @@ const LEVELS = [
         id: "practice_5", initialOrder: [50, 53, 57], correctSorted: [57, 53, 50],
         orderType: "descending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
@@ -151,6 +159,7 @@ const LEVELS = [
         id: "practice_6", initialOrder: [57, 59, 75], correctSorted: [75, 59, 57],
         orderType: "descending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
@@ -159,6 +168,7 @@ const LEVELS = [
         id: "practice_7", initialOrder: [39, 42, 26], correctSorted: [42, 39, 26],
         orderType: "descending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
@@ -167,6 +177,7 @@ const LEVELS = [
         id: "practice_8", initialOrder: [61, 69, 66], correctSorted: [69, 66, 61],
         orderType: "descending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
@@ -175,6 +186,7 @@ const LEVELS = [
         id: "practice_9", initialOrder: [79, 81, 92], correctSorted: [92, 81, 79],
         orderType: "descending", mode: "practice",
         steps: [
+            { type: "msg", text: "Let us put the steps in order.", silent: true },
             { type: "show_slots", text: "Put the steps in order from largest to smallest." }
         ]
     },
@@ -550,10 +562,9 @@ function loadLevel(idx) {
     // Render immediate snap to positions (sets baseline coords)
     renderSlots(false);
 
-    // Always scatter stones for the animated intro on every LBD
+    // Scatter/wobble intro for every LBD
     scatterStones();
-
-    // Hide the HUD (wizard template) during the scatter/sway intro
+    if (gameState.currentLevelIdx < LEVELS.length - 1) showNeelWatching();
     const introHud = document.querySelector(".instruction-hud");
     if (introHud) introHud.classList.add("hud-scatter");
 
@@ -1112,6 +1123,13 @@ function runStep() {
     
     // Voice-driven orchestration
     if (step.type === "msg") {
+        // Reveal arrow separators if this slide requests it
+        if (step.showArrows) {
+            document.querySelectorAll(".slot-separator").forEach(s => {
+                s.style.transition = "opacity 0.5s ease";
+                s.style.opacity    = "1";
+            });
+        }
         // Highlight comparison numbers if specified
         if (step.glowNums) {
             step.glowNums.forEach(n => {
@@ -1165,7 +1183,7 @@ function runStep() {
         });
         renderSlots(true, true); // animate from captured position → slots
 
-        // Hide arrow separators — they appear only when the tap instruction arrives
+        // Arrows stay hidden until the "From smallest/largest to …" slide
         document.querySelectorAll(".slot-separator").forEach(s => {
             s.style.transition = "none";
             s.style.opacity    = "0";
@@ -1191,11 +1209,6 @@ function runStep() {
         speakText(step.text, () => nextStep());
     }
     else if (step.type === "tap") {
-        // Reveal arrow separators when the tap instruction arrives
-        document.querySelectorAll(".slot-separator").forEach(s => {
-            s.style.transition = "opacity 0.6s ease";
-            s.style.opacity    = "1";
-        });
         gameState.isWaitingForClick = true;
         gameState.targetDigitClick = { num: step.targetNum, type: step.digitType, tapMode: step.tapMode || "smallest" };
         applyDigitHighlights(step.highlight, step.highlightStones);
@@ -1543,13 +1556,7 @@ function spawnBalloons(onBeforeTransition) {
     let overlayShown = false;
 
     function doTransition() {
-        const overlay = document.getElementById("transitionOverlay");
-        const video   = document.getElementById("transitionVideo");
-        const climbNum = (gameState.currentLevelIdx % 6) + 1;
-        video.src = `image/${climbNum} climb.mp4`;
-        overlay.classList.add("active");
-        video.play().catch(() => {});
-        setTimeout(completeTransition, 2000);
+        fadeTransition();
     }
 
     function showOverlay() {
@@ -1824,9 +1831,11 @@ function playNeelJumps(onDone) {
         const isExit = (wi === wps.length - 2);   // last move → off-screen
 
         if (isExit) {
-            // Running exit: RUN pose, flat trajectory, quick
-            draw(NEEL_RUN);
-            moveTo(a, b, 0, 480, () => {
+            // Jumping exit: same arc as stone-to-stone jumps, exits off-screen
+            const arcH = Math.min(360, dx * 0.82);
+            const dur  = 440 + dx * 0.25;
+            draw(NEEL_JUMP);
+            moveTo(a, b, arcH, dur, () => {
                 canvas.remove();
                 if (onDone) onDone();
             });
@@ -1890,13 +1899,7 @@ function navigateToLevel(idx) {
     clearIdleTimer(); clearNudgeTimer();
     const nj = document.getElementById('neel-jumper'); if (nj) nj.remove();
     gameState.pendingLevelIdx = idx;
-    const overlay = document.getElementById('transitionOverlay');
-    const video   = document.getElementById('transitionVideo');
-    const climbNum = (idx % 6) + 1;
-    video.src = `image/${climbNum} climb.mp4`;
-    overlay.classList.add('active');
-    video.play().catch(() => {});
-    setTimeout(completeTransition, 2000);
+    fadeTransition();
 }
 
 // --- AGNI GAME-COMPLETE ENDING ---
@@ -2062,26 +2065,43 @@ function initSplashScreen() {
     }, { once: true });
 }
 
-function completeTransition() {
+// Smooth dissolve transition used between every LBD (after Neel jump, nav menu, etc.)
+function fadeTransition() {
     const overlay = document.getElementById("transitionOverlay");
-    if (!overlay.classList.contains("active")) return;  // guard: already done
-    overlay.classList.remove("active");
-    const video = document.getElementById("transitionVideo");
-    video.pause();
-    // Do NOT reset currentTime here — the src changes on the next play,
-    // so resetting now causes a visible frame-jump while the overlay fades out.
-    let nextIdx;
-    let naturalEnd = false;
-    if (gameState.pendingLevelIdx !== null) {
-        nextIdx = gameState.pendingLevelIdx;
-        gameState.pendingLevelIdx = null;
-    } else {
-        nextIdx = gameState.currentLevelIdx + 1;
-        if (nextIdx >= LEVELS.length) { naturalEnd = true; nextIdx = 0; }
-    }
-    if (naturalEnd) { showAgniEnding(); return; }
-    loadLevel(nextIdx);
+    if (overlay.classList.contains("active")) return;  // already transitioning
+
+    // 1. Fade to black
+    overlay.classList.add("active");
+
+    setTimeout(() => {
+        // 2. Determine next level (or game-complete ending)
+        let nextIdx;
+        let naturalEnd = false;
+        if (gameState.pendingLevelIdx !== null) {
+            nextIdx = gameState.pendingLevelIdx;
+            gameState.pendingLevelIdx = null;
+        } else {
+            nextIdx = gameState.currentLevelIdx + 1;
+            if (nextIdx >= LEVELS.length) { naturalEnd = true; nextIdx = 0; }
+        }
+
+        if (naturalEnd) {
+            overlay.classList.remove("active");
+            showAgniEnding();
+            return;
+        }
+
+        // 3. Load next level while screen is black
+        loadLevel(nextIdx);
+
+        // 4. Fade back in
+        setTimeout(() => overlay.classList.remove("active"), 150);
+
+    }, 450);   // wait for CSS fade-to-black (transition: opacity 0.4s)
 }
+
+// Keep completeTransition as an alias for backward compat (transitionVideo ended event)
+function completeTransition() { fadeTransition(); }
 
 // --- VICTORY / CELEBRATION ---
 function formStaircase(callback) {
