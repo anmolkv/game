@@ -2026,7 +2026,7 @@ function showAgniEnding() {
 
     let agniY  = H + DH + 10;         // starts below screen
     const agniX = (W - DW) / 2;
-    const AGNI_SPEED = H / 200;        // a little faster — ~3.3 s to cross
+    const AGNI_SPEED = H / 140;        // faster — ~2.3 s to cross
 
     // Orange circle dissolve (plays FIRST)
     const MAX_R = Math.hypot(W / 2, H / 2) * 1.05;
@@ -2060,48 +2060,38 @@ function showAgniEnding() {
     const tick = now => {
         ctx.clearRect(0, 0, W, H);
 
-        // ── 1. ORANGE CIRCLE DISSOLVE ────────────────────────────────────────
-        if (phase === 'dissolve') {
-            dissolveR = Math.min(MAX_R, dissolveR + DISSOLVE_SPD);
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(W / 2, H / 2, dissolveR, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.fillStyle = '#c95000';
-            ctx.fill();
-            ctx.restore();
-            if (dissolveR >= MAX_R) phase = 'text';
-        }
+        // ── Agni flies immediately from the first frame ───────────────────────
+        agniY -= AGNI_SPEED;
+        if (now - lastFlap >= FLAP_MS) { frame = (frame + 1) % COLS; lastFlap = now; }
 
-        // ── 2. TEXT FADE-IN on solid orange ──────────────────────────────────
-        if (phase === 'text') {
+        // ── Orange dissolve builds up while Agni is flying ───────────────────
+        dissolveR = Math.min(MAX_R, dissolveR + DISSOLVE_SPD);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(W / 2, H / 2, dissolveR, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = '#c95000';
+        ctx.fill();
+        ctx.restore();
+
+        // Once dissolve is full, also show text
+        if (dissolveR >= MAX_R) {
             ctx.fillStyle = '#c95000';
             ctx.fillRect(0, 0, W, H);
             shadowA = Math.min(1, shadowA + 0.020);
             if (shadowA > 0.45) textA = Math.min(1, textA + 0.025);
-            drawText();
-            if (textA >= 1) phase = 'fly';   // launch Agni once text is fully shown
         }
 
-        // ── 3. AGNI FLIES BEHIND TEXT ────────────────────────────────────────
-        if (phase === 'fly') {
-            // Orange background
-            ctx.fillStyle = '#c95000';
-            ctx.fillRect(0, 0, W, H);
-
-            // Agni drawn BEFORE text so text always sits on top
-            agniY -= AGNI_SPEED;
-            if (now - lastFlap >= FLAP_MS) { frame = (frame + 1) % COLS; lastFlap = now; }
-            if (_agniEndingSprite) {
-                ctx.drawImage(_agniEndingSprite, frame * FW, 0, FW, FH, agniX, agniY, DW, DH);
-            }
-
-            // Text always on top of Agni
-            drawText();
-
-            // Agni exits top → stop loop, keep orange+text visible
-            if (agniY + DH < 0 && !doneFired) doneFired = true;
+        // Agni drawn on top of orange (but below text)
+        if (_agniEndingSprite && agniY + DH > 0) {
+            ctx.drawImage(_agniEndingSprite, frame * FW, 0, FW, FH, agniX, agniY, DW, DH);
         }
+
+        // Text always on top of Agni
+        if (dissolveR >= MAX_R) drawText();
+
+        // Agni exits top → stop loop
+        if (agniY + DH < 0 && !doneFired) doneFired = true;
 
         if (!doneFired) requestAnimationFrame(tick);
     };
