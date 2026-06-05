@@ -349,7 +349,12 @@ document.addEventListener("DOMContentLoaded", () => {
             gameState.audioCtx.resume().catch(() => {});
         }
         const m = document.getElementById("bgMusic");
-        if (m && m.paused) { m.muted = false; m.play().catch(() => {}); }
+        if (m) {
+            m.removeAttribute('muted');
+            m.muted  = false;
+            m.volume = 0.25;
+            if (m.paused) m.play().catch(() => {});
+        }
         document.removeEventListener('pointerdown', unlockAudio);
     }, true);
 
@@ -435,12 +440,12 @@ function setupAudio() {
 function startBackgroundMusic() {
     const music = document.getElementById("bgMusic");
     if (!music) return;
-    music.volume = 0.12;
-    music.muted = true;
-    music.play().then(() => {
-        // Browser allowed muted autoplay — unmute immediately
-        music.muted = false;
-    }).catch(() => {});
+    music.removeAttribute('muted');   // clear the HTML attribute (not just the JS property)
+    music.muted  = false;
+    music.volume = 0.25;
+    music.play().catch(() => {
+        // Autoplay blocked — will be retried on first user gesture via unlockAudio
+    });
 }
 
 function playSynth(type) {
@@ -2130,7 +2135,7 @@ function initSplashScreen() {
             gameState.audioCtx.resume().catch(() => {});
         }
         const m = document.getElementById('bgMusic');
-        if (m && (m.paused || m.muted)) { m.muted = false; m.play().catch(() => {}); }
+        if (m) { m.removeAttribute('muted'); m.muted = false; m.volume = 0.25; if (m.paused) m.play().catch(() => {}); }
     });
 
     const btn = document.getElementById('startBtn');
