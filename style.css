@@ -472,10 +472,6 @@ body {
     cursor: pointer;
 }
 
-/* Tens vs Ones color coding or slight variation if desired */
-.digit.tens {}
-.digit.ones {}
-
 /* Highlights for comparisons */
 .digit.highlight {
     color: #ffea00;
@@ -925,25 +921,16 @@ body {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: #5a0daa;   /* purple shown as the circle contracts */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: #0a1e3a;
     overflow: hidden;
     -webkit-user-select: none;
     user-select: none;
 }
 
-/* Wrapper fills the entire screen — no letterboxing */
-.splash-wrap {
+/* Background fills screen completely */
+.splash-bg-img {
     position: absolute;
     inset: 0;
-    overflow: hidden;
-}
-
-/* Cover the full screen, cropping if needed — no bars, no distortion */
-.splash-bg-img {
-    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -951,38 +938,176 @@ body {
     pointer-events: none;
 }
 
-/* Start button — horizontally centred, near bottom of the background art.
-   The image is 2172×724 with transparent side-padding, so display at 52%
-   of wrapper width so the visible button is ~32% wide. */
-.splash-btn-img {
+/* ── TITLE ─────────────────────────────────────────────── */
+.splash-title {
+    position: absolute;
+    top: 6%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2vw;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.splash-word {
+    font-family: 'Lilita One', cursive;
+    font-size: clamp(48px, 8vw, 130px);
+    color: #ffd700;
+    text-shadow: 0 4px 0 #a85000, 0 8px 24px rgba(0,0,0,0.6);
+    opacity: 0;
+    animation: word-drop 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+/* letter delays set by JS — no CSS delay needed on the word spans */
+
+@keyframes word-drop {
+    0%   { transform: translateY(-120px); opacity: 0; }
+    100% { transform: translateY(0);      opacity: 1; }
+}
+
+/* ── WIZARD (left) ─────────────────────────────────────── */
+.splash-wizard {
+    position: absolute;
+    left: -29%;
+    bottom: -4%;
+    width: 88%;
+    pointer-events: none;
+    transform-origin: bottom left;
+    opacity: 0;
+    z-index: 1;   /* behind stones (5), title (10) and button (10) */
+    animation: char-enter-left 0.8s cubic-bezier(0.34,1.2,0.64,1) 0.3s forwards;
+}
+
+@keyframes char-enter-left {
+    0%   { transform: translateX(-110%); opacity: 0; }
+    100% { transform: translateX(0);     opacity: 1; }
+}
+
+/* ── AGNI + NEEL (right) ───────────────────────────────── */
+.splash-agni-neel {
+    position: absolute;
+    right: -38%;
+    top: 0%;
+    width: 90%;
+    pointer-events: none;
+    transform-origin: bottom right;
+    opacity: 0;
+    animation: char-enter-right 0.8s cubic-bezier(0.34,1.2,0.64,1) 0.5s forwards;
+}
+
+@keyframes char-enter-right {
+    0%   { transform: translateX(110%); opacity: 0; }
+    100% { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── STONES (centre, between characters) ──────────────── */
+.splash-stones-area {
     position: absolute;
     left: 50%;
-    bottom: 2%;
-    transform: translateX(-50%);
-    width: 20%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 8%;
+    align-items: flex-end;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;    /* above wizard (1), below title (10) */
+    animation: fade-in-stones 0.6s ease 1.4s forwards;
+}
+
+@keyframes fade-in-stones {
+    to { opacity: 1; }
+}
+
+.splash-stone {
+    width: clamp(120px, 16vw, 240px);
+    height: auto;
+    animation: stone-slow-sway 4s ease-in-out infinite;
+}
+.s1 { animation-delay: 0s; }
+.s2 { animation-delay: 1.3s; }
+.s3 { animation-delay: 2.6s; }
+
+@keyframes stone-slow-sway {
+    0%, 100% { transform: rotate(-6deg) translateY(0px); }
+    50%       { transform: rotate(6deg)  translateY(-12px); }
+}
+
+/* ── START BUTTON ──────────────────────────────────────── */
+.splash-start-btn {
+    position: absolute;
+    left: 50%;
+    bottom: 6%;
+    transform: translateX(-50%) scale(0);
+    font-family: 'Lilita One', cursive;
+    font-size: clamp(22px, 3.2vw, 52px);
+    color: #fff;
+    background: linear-gradient(to bottom, #a020f0, #5b0daa);
+    border: 4px solid #ffd700;
+    border-radius: 999px;
+    padding: 0.55em 2.2em;
     cursor: pointer;
-    animation: splash-btn-pulse 1.4s ease-in-out infinite;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    box-shadow: 0 0 28px rgba(255,215,0,0.55),
+                inset 0 3px 0 rgba(255,255,255,0.25),
+                0 8px 0 #3a006e;
+    opacity: 0;
+    z-index: 10;
+    -webkit-user-select: none; user-select: none;
+    animation: btn-pop-in 0.6s cubic-bezier(0.34,1.56,0.64,1) 1.8s forwards,
+               splash-btn-pulse 1.5s ease-in-out 2.4s infinite;
+}
+
+.splash-start-btn:active {
+    transform: translateX(-50%) scale(0.95) translateY(4px);
+    box-shadow: 0 0 18px rgba(255,215,0,0.4), 0 2px 0 #3a006e;
+}
+
+@keyframes btn-pop-in {
+    0%   { transform: translateX(-50%) scale(0);   opacity: 0; }
+    100% { transform: translateX(-50%) scale(1);   opacity: 1; }
 }
 
 @keyframes splash-btn-pulse {
-    0%, 100% { transform: translateX(-50%) scale(1.00); filter: brightness(1.00); }
-    50%       { transform: translateX(-50%) scale(1.06); filter: brightness(1.15); }
+    0%, 100% { transform: translateX(-50%) scale(1.00); box-shadow: 0 0 28px rgba(255,215,0,0.55), inset 0 3px 0 rgba(255,255,255,0.25), 0 8px 0 #3a006e; }
+    50%       { transform: translateX(-50%) scale(1.07); box-shadow: 0 0 45px rgba(255,215,0,0.85), inset 0 3px 0 rgba(255,255,255,0.25), 0 8px 0 #3a006e; }
 }
 
-/* ── Dissolve on tap ────────────────────────────────────────────────────
-   The entire wrap contracts into a circle centred on the Start button,
-   like the screen is being "sucked" into the button. */
-.splash-screen.dissolving .splash-wrap {
-    animation: splash-circle-dissolve 0.75s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+/* ── EXIT animations (reverse of entry) ────────────────── */
+@keyframes word-exit {
+    from { transform: translateY(0);    opacity: 1; }
+    to   { transform: translateY(-130px); opacity: 0; }
+}
+@keyframes wizard-exit {
+    from { transform: translateX(0);    opacity: 1; }
+    to   { transform: translateX(-120%); opacity: 0; }
+}
+@keyframes agni-exit {
+    from { transform: translateX(0);   opacity: 1; }
+    to   { transform: translateX(120%); opacity: 0; }
+}
+@keyframes stones-exit {
+    from { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    to   { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+}
+@keyframes btn-exit {
+    from { transform: translateX(-50%) scale(1);   opacity: 1; }
+    to   { transform: translateX(-50%) scale(0);   opacity: 0; }
 }
 
-.splash-screen.dissolving .splash-btn-img {
-    animation: none;   /* stop pulsing during exit */
+/* Dissolving state — trigger all reverse exits */
+.splash-screen.dissolving .splash-wizard {
+    animation: wizard-exit 0.55s ease-in 0.05s forwards !important;
 }
-
-@keyframes splash-circle-dissolve {
-    0%   { clip-path: circle(150% at 50% 91%); opacity: 1; }
-    70%  { clip-path: circle(18%  at 50% 91%); opacity: 1; }
-    100% { clip-path: circle(0%   at 50% 91%); opacity: 0; }
+.splash-screen.dissolving .splash-agni-neel {
+    animation: agni-exit 0.55s ease-in 0.05s forwards !important;
 }
+.splash-screen.dissolving .splash-stones-area {
+    animation: stones-exit 0.45s ease-in 0.1s forwards !important;
+}
+.splash-screen.dissolving .splash-start-btn {
+    animation: btn-exit 0.3s ease-in forwards !important;
+}
+/* Letter exits are handled by JS with individual staggered delays */
 

@@ -28,7 +28,11 @@
       "Bash(python3 -c \"from PIL import Image; img=Image.open\\('d:/CG/the story night game/image/agni flying.png'\\); print\\(img.size, img.mode\\)\")",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\agni flying.png\"\\); Write-Host \"$\\($i.Width\\) x $\\($i.Height\\) mode=$\\($i.PixelFormat\\)\"; $i.Dispose\\(\\))",
       "Bash(git restore *)",
-      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\neel looking top.png\"\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\))"
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\neel looking top.png\"\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\))",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\neel clapping.png\"\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\))",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\final BG \\(13\\) 1 blurred for pre lbd..png\"\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\))",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $i=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\Flying wizard.png\"\\); Write-Host $i.Width $i.Height; $i.Dispose\\(\\))",
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $w=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\Flying wizard.png\"\\); $a=[System.Drawing.Image]::FromFile\\(\"d:\\\\CG\\\\the story night game\\\\image\\\\agni and neel thumb up.png\"\\); Write-Host \"Wizard:\" $w.Width $w.Height; Write-Host \"AgniNeel:\" $a.Width $a.Height; $w.Dispose\\(\\); $a.Dispose\\(\\))"
     ]
   }
 }

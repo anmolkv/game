@@ -92,12 +92,32 @@
 
     <audio id="bgMusic" src="SFX/BACKGROUND/SFX 1.mp3" loop muted preload="auto"></audio>
 
-    <!-- Pre-game splash screen — removed after Start button dissolve -->
+    <!-- Pre-game splash screen -->
     <div id="splashScreen" class="splash-screen">
-        <div class="splash-wrap" id="splashWrap">
-            <img src="image/pre lbd.png"                   class="splash-bg-img"  draggable="false" />
-            <img src="image/start button pre lbd..png"     class="splash-btn-img" id="startBtn" draggable="false" />
+        <!-- Blurred castle background -->
+        <img src="image/final BG (13) 1 blurred for pre lbd..png" class="splash-bg-img" draggable="false" />
+
+        <!-- Title: words drop one by one -->
+        <div class="splash-title">
+            <span class="splash-word word-1">STAIRWAY</span>
+            <span class="splash-word word-2">SHUFFLE</span>
         </div>
+
+        <!-- Wizard enters from left -->
+        <img src="image/Flying wizard.png" class="splash-wizard" draggable="false" />
+
+        <!-- Agni + Neel peek from right edge -->
+        <img src="image/Side view of agni and neel.png" class="splash-agni-neel" draggable="false" />
+
+        <!-- 3 stones wobbling in the centre -->
+        <div class="splash-stones-area">
+            <img src="image/Stone.png" class="splash-stone s1" draggable="false" />
+            <img src="image/Stone.png" class="splash-stone s2" draggable="false" />
+            <img src="image/Stone.png" class="splash-stone s3" draggable="false" />
+        </div>
+
+        <!-- Start button — themed to match the game -->
+        <div class="splash-start-btn" id="startBtn">▶ &nbsp;Start</div>
     </div>
 
     <script src="game.js?v=11.3"></script>

@@ -43,7 +43,8 @@ const gameState = {
     idleTimer: null,
     nudgeTimer: null,
     levelComplete: false,
-    pendingLevelIdx: null
+    pendingLevelIdx: null,
+    hintInProgress: false
 };
 
 // --- LEVEL REGISTRY ---
@@ -326,6 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initFlyingWizard();
     preloadNeelSprite();
     preloadNeelWatching();
+    preloadNeelClapping();
     preloadAgniSprite();
     setupFXCanvas();
 
@@ -730,6 +732,7 @@ function setupInteractions(el) {
     // Drag logic
     el.addEventListener("pointerdown", (e) => {
         if (gameState.levelComplete) return;
+        if (gameState.hintInProgress) return;    // block during drag hint animation
         if (gameState.isWaitingForClick) return;
         
         const slotIdx = gameState.slots.indexOf(el);
@@ -1273,7 +1276,7 @@ function handleDigitClick(stepEl, digitEl) {
         document.querySelectorAll(".number-step").forEach(s => s.classList.remove("stone-glow-white"));
         stepEl.classList.add("stone-glow-green");
         digitEl.classList.add("highlight");   // only the tapped comparison digit glows
-        showFlyingWizard(true);
+        showNeelClapping();
         
         // Starburst fx
         const rect = stepEl.getBoundingClientRect();
@@ -1322,6 +1325,7 @@ function handleTutorialSwapSuccess(slotIdx, stepData) {
     // Highlight successful placement
     playSynth('correct');
     stepEl.classList.add("stone-glow-green");
+    showNeelClapping();
     
     // Lock target
     if (stepData.lockTarget) {
@@ -1333,8 +1337,7 @@ function handleTutorialSwapSuccess(slotIdx, stepData) {
     const cont = document.getElementById("gameContainer").getBoundingClientRect();
     const elRect = stepEl.getBoundingClientRect();
     spawnStars((elRect.left + elRect.width/2 - cont.left)/gameState.scale, (elRect.top + elRect.height/2 - cont.top)/gameState.scale, "#ffeb3b", 25);
-    showFlyingWizard();
-    
+
     setInstruction(stepData.successMsg);
     
     // Trigger callback driven voice progression
@@ -1439,7 +1442,9 @@ function showDragNudge(stoneEl, targetSlotIdx) {
         swapOrigY = parseFloat(swapEl.style.top);
     }
 
-    const moveDur = 700;
+    const moveDur = 280;          // faster hint animation
+
+    gameState.hintInProgress = true;   // block stone interaction during hint
 
     // Phase 1 — move stones toward target positions
     stoneEl.style.transition = `left ${moveDur}ms ease-in-out, top ${moveDur}ms ease-in-out`;
@@ -1455,7 +1460,7 @@ function showDragNudge(stoneEl, targetSlotIdx) {
         swapEl.style.top  = `${origY}px`;
     }
 
-    // Phase 2 — pause, then return
+    // Phase 2 — short pause, then return
     setTimeout(() => {
         stoneEl.style.transition = `left ${moveDur}ms ease-in-out, top ${moveDur}ms ease-in-out`;
         stoneEl.style.left = `${origX}px`;
@@ -1467,7 +1472,7 @@ function showDragNudge(stoneEl, targetSlotIdx) {
             swapEl.style.top  = `${swapOrigY}px`;
         }
 
-        // Phase 3 — clean up
+        // Phase 3 — clean up and re-enable interaction
         setTimeout(() => {
             stoneEl.style.opacity    = "";
             stoneEl.style.zIndex     = "";
@@ -1476,8 +1481,9 @@ function showDragNudge(stoneEl, targetSlotIdx) {
                 swapEl.style.opacity    = "";
                 swapEl.style.transition = "";
             }
+            gameState.hintInProgress = false;   // re-enable interaction
         }, moveDur);
-    }, moveDur + 600);
+    }, moveDur + 220);
 }
 
 function showPracticeNudge() {
@@ -1685,6 +1691,84 @@ function preloadNeelSprite() {
 
 // --- NEEL WATCHING (intro sway screen) ---
 let _neelWatchImg = null;
+
+// --- NEEL CLAPPING (correct-answer celebration) ---
+let _neelClappingSprite = null;
+
+function preloadNeelClapping() {
+    _neelClappingSprite = new Image();
+    _neelClappingSprite.src = 'image/neel clapping.png';
+}
+
+function showNeelClapping() {
+    // Remove any existing instance
+    const old = document.getElementById('neel-clapping');
+    if (old) old.remove();
+
+    if (!_neelClappingSprite || !_neelClappingSprite.naturalWidth) return;
+
+    const COLS = 2;
+    const fw   = _neelClappingSprite.naturalWidth  / COLS;  // 960 px
+    const fh   = _neelClappingSprite.naturalHeight;          // 1080 px
+
+    const DW = 340;
+    const DH = Math.round(DW * fh / fw);  // ≈ 382 px
+
+    const centreX = (1920 - DW) / 2;
+    const showTop = 1080 - DH;
+    const hideTop = 1080 + 20;
+
+    const cv = document.createElement('canvas');
+    cv.id     = 'neel-clapping';
+    cv.width  = DW;
+    cv.height = DH;
+    Object.assign(cv.style, {
+        position:      'absolute',
+        left:          `${centreX}px`,
+        top:           `${hideTop}px`,
+        width:         DW + 'px',
+        height:        DH + 'px',
+        pointerEvents: 'none',
+        zIndex:        '150',
+        transition:    'top 0.45s cubic-bezier(0.34,1.56,0.64,1)'
+    });
+
+    document.getElementById('playground').appendChild(cv);
+    const ctx = cv.getContext('2d');
+
+    function drawFrame(f) {
+        ctx.clearRect(0, 0, DW, DH);
+        ctx.drawImage(_neelClappingSprite, f * fw, 0, fw, fh, 0, 0, DW, DH);
+    }
+
+    drawFrame(0);
+
+    // Pop up
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        cv.style.top = `${showTop}px`;
+    }));
+
+    // Clapping cycle
+    let frame     = 0;
+    let clapsDone = 0;
+    const TOTAL    = 4;
+    const FRAME_MS = 220;
+
+    setTimeout(() => {
+        const iv = setInterval(() => {
+            frame = frame === 0 ? 1 : 0;
+            drawFrame(frame);
+            if (frame === 1) clapsDone++;
+
+            if (clapsDone >= TOTAL) {
+                clearInterval(iv);
+                cv.style.transition = 'top 0.35s ease-in';
+                cv.style.top        = `${hideTop}px`;
+                setTimeout(() => cv.remove(), 400);
+            }
+        }, FRAME_MS);
+    }, 520);
+}
 
 function preloadNeelWatching() {
     _neelWatchImg = new Image();
@@ -2029,6 +2113,22 @@ function initSplashScreen() {
     const splash = document.getElementById('splashScreen');
     if (!splash) { loadLevel(0); return; }
 
+    // Split title words into individual letters — each drops one by one
+    let letterDelay = 0.3;
+    splash.querySelectorAll('.splash-word').forEach(wordEl => {
+        const chars = [...wordEl.textContent];
+        wordEl.textContent = '';
+        chars.forEach(ch => {
+            const s = document.createElement('span');
+            s.textContent = ch;
+            s.style.cssText = `display:inline-block;opacity:0;
+                animation:word-drop 0.55s cubic-bezier(0.34,1.56,0.64,1) ${letterDelay}s forwards;`;
+            wordEl.appendChild(s);
+            letterDelay += 0.09;
+        });
+        letterDelay += 0.18;  // extra pause between words
+    });
+
     // Try to start music immediately while the splash is visible
     setupAudio();
     startBackgroundMusic();
@@ -2049,18 +2149,44 @@ function initSplashScreen() {
     btn.addEventListener('pointerdown', () => {
         if (splash.classList.contains('dissolving')) return;
 
-        // Ensure audio is fully unlocked on the Start gesture
         setupAudio();
         startBackgroundMusic();
 
-        // Trigger the circle-dissolve animation
+        // ── Reverse-exit letters staggered last→first ──────────────
+        const letters = [...splash.querySelectorAll('.splash-word span')];
+        letters.reverse().forEach((s, i) => {
+            s.style.animation = `word-exit 0.45s ease-in ${i * 0.04}s forwards`;
+        });
+
+        // Trigger CSS exit animations on all other elements
         splash.classList.add('dissolving');
 
-        // After animation completes: remove splash and start the game
+        // ── After all exits (~0.85 s), blur overlay then load game ──
         setTimeout(() => {
-            splash.remove();
-            loadLevel(0);
-        }, 780);
+            const blurEl = document.createElement('div');
+            blurEl.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:10000',
+                'background:rgba(8,15,45,0.88)',
+                'backdrop-filter:blur(20px)',
+                '-webkit-backdrop-filter:blur(20px)',
+                'opacity:0', 'transition:opacity 0.5s ease',
+                'pointer-events:none'
+            ].join(';');
+            document.body.appendChild(blurEl);
+
+            // Fade blur in
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                blurEl.style.opacity = '1';
+            }));
+
+            // After blur settles, start game
+            setTimeout(() => {
+                splash.remove();
+                blurEl.remove();
+                loadLevel(0);
+            }, 580);
+
+        }, 860);
 
     }, { once: true });
 }
